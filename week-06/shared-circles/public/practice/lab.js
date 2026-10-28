@@ -27,16 +27,21 @@ function run() {
   status.className = ''; status.textContent = 'Starting…';
   const safe = editor.value.replace(/<\/script/gi, '<\\/script');
   const prefix = '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0}canvas{display:block}</style>'
-    + '<script>window.addEventListener("error", e => parent.postMessage({type:"sketch-error",message:e.message},"*"));<\/script>'
+    + '<script>window.__reportSketchError = message => parent.postMessage({type:"sketch-error",message:String(message)},"*");window.addEventListener("error", e => window.__reportSketchError(e.message));window.addEventListener("unhandledrejection", e => window.__reportSketchError(e.reason?.message || e.reason));<\/script>'
     + '<script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"><\/script></head><body>';
-  frame.srcdoc = prefix + '<script>' + safe + '<\/script></body></html>';
+  const guarded = '<script>(() => { for (const name of ["setup", "draw"]) { const learnerFunction = window[name]; if (typeof learnerFunction === "function") window[name] = function (...args) { try { return learnerFunction.apply(this, args); } catch (error) { window.__reportSketchError(error.message); throw error; } }; } })();<\/script>';
+  frame.srcdoc = prefix + '<script>' + safe + '<\/script>' + guarded + '</body></html>';
 }
 frame.addEventListener('load', () => {
   if (!status.classList.contains('error')) status.textContent = 'Loaded · move the mouse over the canvas';
 });
 window.addEventListener('message', event => {
   if (event.source === frame.contentWindow && event.data?.type === 'sketch-error') {
-    status.className = 'error'; status.textContent = event.data.message;
+    status.className = 'error';
+    status.textContent = event.data.message;
+    if (/webgl.*context/i.test(event.data.message)) {
+      status.textContent += ' — This browser cannot create a WebGL context. Try a desktop browser with WebGL support. 当前浏览器无法建立 WebGL 上下文，请在支持 WebGL 的电脑浏览器中尝试。';
+    }
   }
 });
 document.getElementById('run').addEventListener('click', run);
