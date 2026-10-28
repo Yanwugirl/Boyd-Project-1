@@ -1,0 +1,4 @@
+body { margin:0; overflow:hidden; font:14px Arial,sans-serif; }
+canvas { display:block; }
+aside { position:fixed; top:12px; left:12px; padding:9px 12px; background:rgba(255,255,255,.9); line-height:1.6; z-index:1; }
+a { color:#245c8a; }

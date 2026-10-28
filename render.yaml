@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: jiaming-week6-shared-circles
+    runtime: node
+    plan: free
+    rootDir: week-06/shared-circles
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
