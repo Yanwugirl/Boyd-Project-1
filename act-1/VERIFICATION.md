@@ -22,3 +22,7 @@
 ## Implementation choices to discuss
 
 The working title, short-sentence palette, 1.5-second dwell, abstraction prompt, symmetric filtering and minimum two messages per player are prototype choices. They can be revised without replacing the shared visual asset set.
+
+## Chatroom revision
+
+The illustrated player page was replaced with a standard chatroom after Jiaming clarified the intended experience. The sidebar, message history, always-visible textarea, send action, searching state and end-chat state were reviewed. Eight tests pass, including real stranger matching that excludes invite-code rooms. Two browser tabs were paired through the find button and exchanged freely typed messages in both directions in the labelled rehearsal mode. The separately hosted interface preview uses sample messages and does not offer live stranger matching. The retained illustration assets remain available but are not displayed in this interface.

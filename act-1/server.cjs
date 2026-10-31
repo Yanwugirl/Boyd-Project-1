@@ -56,7 +56,7 @@ function createGame(options = {}) {
   cleaner.unref();
 
   io.on('connection', socket => {
-    socket.on('join', (data = {}, ack = () => {}) => {
+    function joinRoom(data = {}, ack = () => {}) {
       if (typeof ack !== 'function') return;
       if (!data || typeof data !== 'object' || Array.isArray(data)) { ack({ ok: false, error: 'Invalid room request.' }); return; }
       if (socket.data.room) { ack({ ok: false, error: 'Already in a room.' }); return; }
@@ -89,7 +89,33 @@ function createGame(options = {}) {
       }
       player.socketId = socket.id; player.offlineAt = null;
       socket.data.room = id; socket.join(id); room.touched = clock();
-      ack({ ok: true, role: player.role }); publish(room);
+      if (room.players.every(isPresent)) room.matching = false;
+      ack({ ok: true, role: player.role, room: room.id }); publish(room);
+    }
+    socket.on('join', joinRoom);
+
+    // Pair two visitors who explicitly choose to meet someone new.
+    // Invite-code rooms do not enter the matching queue.
+    socket.on('match:find', (data = {}, ack = () => {}) => {
+      if (typeof ack !== 'function') return;
+      if (!data || typeof data.token !== 'string' || !/^[a-zA-Z0-9-]{20,80}$/.test(data.token)) {
+        ack({ ok: false, error: 'The connection could not be started.' }); return;
+      }
+      const candidate = [...rooms.values()].find(room => room.matching && isPresent(room.players[0]) && !room.players[1]);
+      const id = candidate?.id || `chat-${crypto.randomBytes(5).toString('hex')}`;
+      joinRoom({ room: id, token: data.token }, result => {
+        if (result.ok && !candidate) rooms.get(id).matching = true;
+        ack(result);
+      });
+    });
+
+    socket.on('typing', active => {
+      const c = context(socket);
+      if (!c || !c.room.players.every(isPresent) || typeof active !== 'boolean') return;
+      const now = clock();
+      if (active && now - (socket.data.lastTyping || 0) < 250) return;
+      socket.data.lastTyping = now;
+      socket.to(c.room.id).emit('typing', active);
     });
 
     socket.on('message:send', async (data = {}, ack = () => {}) => {
@@ -149,6 +175,10 @@ function createGame(options = {}) {
       const c = context(socket);
       if (!c) return;
       c.player.socketId = null; c.player.offlineAt = clock(); c.player.ready = false;
+      socket.to(c.room.id).emit('typing', false);
+      if (c.room.matching && !c.room.players[1]) {
+        rooms.delete(c.room.id); return;
+      }
       c.room.touched = clock(); publish(c.room);
     });
   });

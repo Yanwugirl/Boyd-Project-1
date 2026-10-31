@@ -1,8 +1,8 @@
-# Between Us · Act I
+# Between Us · Act I — Chatroom
 
 A two-person networked game poem by Jiaming and Sam. This build implements the domestic conversation from **Project1_AI_Relationships_Bilingual_Notes.md** and the later discussion with Boyd: `x = player input`, `y = an abstract interpretation from local Ollama`, then deliver `y` to the other player.
 
-The first connection receives the human role; the second receives the robot role. Each sits in a separate home. They see different identity cues and the same visual world. Their actual choices travel through the interface. The first act does not reveal the original/transformed comparison; the server retains it for the later act.
+The current interface is a conventional one-to-one chatroom for two visitors. It opens with a labelled sample conversation for reviewing the layout. The Node version can pair two visitors with **Find someone to talk to**, or connect them through a shared room code. Free typing is the primary input. The earlier illustrated-room assets are retained for reference and are no longer displayed in the chat interface. The server retains the two original roles and separate x/y messages for the later acts; the role meaning is still a narrative decision for Jiaming and Sam.
 
 ## Quick start on Windows
 
@@ -13,7 +13,7 @@ npm ci
 npm run demo
 ```
 
-Open **http://localhost:3000**. Choose a room name such as `our-window`. Open the same URL in another browser/window. The **Open a second player** link under **Room & rehearsal details** creates a fresh seat in a new tab. Rehearsal uses clearly labelled fixed dialogue; it does not use a language model.
+Open **http://localhost:3000** in two browsers/windows. Click **Find someone to talk to** in each: the server pairs the two waiting visitors. To use a specific room instead, expand **Have a room code?** and enter the same code on both devices. Rehearsal is clearly labelled: free text passes through unchanged and preset phrases use fixed interpretations; no language model is called. The hosted interface preview is visual only and does not connect visitors to this local server.
 
 Stop the server with **Ctrl+C**. To use real local inference, install and open [Ollama](https://ollama.com/download), then run:
 
@@ -36,10 +36,11 @@ Camera access needs **localhost or HTTPS**. A plain LAN HTTP address supports mo
 
 ## Play
 
-1. Both players enter the same room. Each chooses one of four phrases; **more words** cycles through twelve phrases.
-2. **Use my hand** turns on local hand tracking. Point with the index fingertip and dwell on a phrase for 1.5 seconds. Move away to rearm. Losing the hand pauses selection. A mouse can choose the same phrases. **write my own** is an optional prototype input.
-3. Your own screen shows the line you chose (`x`). The other screen receives the interpreted line (`y`). Both participants are real players. The language model does not generate an autonomous partner.
-4. After at least two messages each, both may choose **Leave this room together**. This closes Act I at the threshold of Act II. Acts II and III are not implemented here.
+1. The page initially shows an **Interface preview** with clearly labelled sample messages. Typing here adds a local preview message; it does not invent a reply from another person.
+2. In the Node build, click **Find someone to talk to** on two devices to enter a shared conversation. Invite-code rooms stay separate from the matching queue.
+3. Type into the message box, then press **Enter** or the send button. **Shift+Enter** adds a line break. Sent and received messages appear on opposite sides. The sender sees x; the recipient sees y. In rehearsal, typed x passes through unchanged.
+4. The quick phrases and optional hand input remain available. The hand button selects those same quick phrases; typing is the primary interface.
+5. **End chat** leaves the conversation. The other person sees a disconnected state. **Start a new conversation** enters a new matching queue.
 
 No one can send while the partner is disconnected. Refreshing restores the same tab's seat and transcript. New visitors cannot take an active seat. Disconnected seats have a ten-minute grace period; a replacement after that starts a fresh transcript. Empty rooms expire after thirty minutes. All conversation data is held in RAM; restarting the server clears it. There is no public transcript endpoint and no disk log of x/y.
 
@@ -64,4 +65,4 @@ npm test
 
 Automated tests use real Socket.IO clients against the Node server. Ollama API tests use a local HTTP fixture and do not constitute a real model inference test. Hardware hand tracking and the model installed on Jiaming's PC require local confirmation. See `VERIFICATION.md` for the completed checks and remaining limits.
 
-Visual previews: **http://localhost:3000/?preview=human** and **?preview=robot**. These show clearly labelled sample dialogue without a partner or model connection.
+The default page is the visual preview. Use the find button or room-code form to enter a live local session. The old human/robot illustration is not the current player interface.

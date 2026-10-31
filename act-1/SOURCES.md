@@ -22,3 +22,7 @@ The room is deliberately ordinary: intimacy happens around a familiar screen, no
 ## Short explanation for Boyd
 
 I started with p5's Shape Primitives and Linear Interpolation examples, then used those techniques to draw a quiet room and a removable robot shell. I used the official p5/ml5 hand tutorial to turn a fingertip into a cursor that can choose a sentence. Following our diagram, the server stores a player's input as x, asks local Ollama for an abstract interpretation, stores the result as y, and sends y to the other player through Socket.IO. The original and delivered messages remain separate so the second act can reveal how the interface shaped the conversation. The two people still supply the words; the model does not replace either participant.
+
+## Chatroom interface revision
+
+After Jiaming clarified the intended experience, the player-facing page was rebuilt as a conventional one-to-one chatroom in original HTML/CSS. The current visual interface does not display the earlier p5 domestic scene. The earlier p5 source references and unchanged vector asset set remain available for later narrative decisions. Socket.IO now also pairs two waiting visitors, and an always-visible textarea supports freely typed conversation. The independently hosted interface preview is explicitly a sample layout, not a live chat service.

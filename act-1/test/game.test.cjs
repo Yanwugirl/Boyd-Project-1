@@ -105,3 +105,20 @@ test('invalid and overlong input is rejected before inference; selected phrases 
   }
   assert.equal((await send(a, 'message:send', { phraseId: 'hello', text: 'injected other text' })).ok, true);
 });
+
+test('stranger matching pairs two visitors, excludes invite rooms, and permits real text exchange', async t => {
+  const { url, client } = await start(t);
+  await client('invite111-invite111-invite111', 'invite-only');
+  const a = io(url, { transports: ['websocket'], autoConnect: false });
+  const b = io(url, { transports: ['websocket'], autoConnect: false });
+  t.after(() => { a.disconnect(); b.disconnect(); });
+  a.connect(); b.connect(); await Promise.all([once(a, 'connect'), once(b, 'connect')]);
+  const first = await send(a, 'match:find', { token: 'match111-match111-match111' });
+  const paired = waitState(a, s => s.paired);
+  const second = await send(b, 'match:find', { token: 'match222-match222-match222' });
+  await paired;
+  assert.equal(first.ok, true); assert.equal(second.room, first.room); assert.notEqual(first.room, 'invite-only');
+  const received = waitState(b, s => s.messages.some(m => m.kind === 'received' && m.text === 'Hello from this browser.'));
+  assert.equal((await send(a, 'message:send', { text: 'Hello from this browser.' })).ok, true);
+  await received;
+});
