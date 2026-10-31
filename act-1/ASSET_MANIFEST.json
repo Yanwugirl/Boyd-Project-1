@@ -1,0 +1,86 @@
+{
+  "version": "act1-2026-10-31-v1",
+  "algorithm": "sha256",
+  "files": [
+    {
+      "path": "public/assets/design-tokens.json",
+      "sha256": "b3630f4e53bc6b7af07578c8726f2ee24b4dd0102a08ec211a394e37102da298",
+      "bytes": 771
+    },
+    {
+      "path": "public/assets/dialogue.json",
+      "sha256": "e0f3c0618c5404d0b91aaa455bfc399e2c8f9415c9302394038cc30f7e3781e4",
+      "bytes": 745
+    },
+    {
+      "path": "public/assets/icon.svg",
+      "sha256": "6929f2cff65dc93d28fd84a9fdd9cd74db7ac69c6769b48fa120df87cc7d15eb",
+      "bytes": 239
+    },
+    {
+      "path": "public/assets/svg/chair.svg",
+      "sha256": "d5eecbabe88b6c820a95eda7dcedae376dea3f56aa884b520398fb26c20a99dc",
+      "bytes": 807
+    },
+    {
+      "path": "public/assets/svg/desk.svg",
+      "sha256": "61bac277b0ab15ebee0b90b86b07735bfdc739319113d4e9f1d4252be63cbb72",
+      "bytes": 842
+    },
+    {
+      "path": "public/assets/svg/door.svg",
+      "sha256": "e6804510b5f45a92cb407e121640c9c7febd9650297be794dd81957eec36ee6c",
+      "bytes": 687
+    },
+    {
+      "path": "public/assets/svg/lamp.svg",
+      "sha256": "d2bb2d43970db4f20a54c523f114cb6d064d164c49020a08ddc1cade89a49484",
+      "bytes": 667
+    },
+    {
+      "path": "public/assets/svg/mug.svg",
+      "sha256": "229996027e10aac95241b74cbebef09e2cf422b3fba4a20d0d20f3d4a7861dcf",
+      "bytes": 671
+    },
+    {
+      "path": "public/assets/svg/person.svg",
+      "sha256": "0b50bf61d3be16da1b94412363c24eb33a13efa9c643852b1c10ed5db66f336d",
+      "bytes": 2117
+    },
+    {
+      "path": "public/assets/svg/phone.svg",
+      "sha256": "4e1a87ce33d2ad86005e193049d23ee69f1192411ac6346196cc4db85e363a3f",
+      "bytes": 784
+    },
+    {
+      "path": "public/assets/svg/plant.svg",
+      "sha256": "28fee1518f398a280c3759254e5957b0b8e0a39bd8ceb0faa5e9b0b7bd0c6aaf",
+      "bytes": 1523
+    },
+    {
+      "path": "public/assets/svg/robot-shell.svg",
+      "sha256": "dc03af8c38865c9a64fa499ced886c3ea4c48ba98e8fae8c722acd4ec1f20f03",
+      "bytes": 2151
+    },
+    {
+      "path": "public/assets/svg/room.svg",
+      "sha256": "0e42be73b46a14f2e9ff3aecf0b6fd4ec4e8f2200255b943d68f531a20e338fb",
+      "bytes": 5236
+    },
+    {
+      "path": "public/assets/vector-assets.json",
+      "sha256": "80f748e6b9807c4839735f8e259ab9bdad23e05e2acfa39ed7b0df0c633fdee4",
+      "bytes": 25624
+    },
+    {
+      "path": "public/scene.js",
+      "sha256": "0606c85eb7445c48e835fd3d060c0c9236899cc11390d6b2b4140b398401c1b8",
+      "bytes": 4915
+    },
+    {
+      "path": "tools/build-assets.py",
+      "sha256": "c505c68e7c6de7adb80834cebdf19bee71eb9f313018eb55167da400aa429ee3",
+      "bytes": 8903
+    }
+  ]
+}

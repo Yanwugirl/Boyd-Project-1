@@ -1,0 +1,21 @@
+{
+  "version":"act1-2026-10-31-v1",
+  "canvas":{"width":1200,"height":760},
+  "colors":{
+    "paper":"#eee9df","ink":"#343b3b","wall":"#e4e0d6","floor":"#c6bbb0",
+    "wood":"#a78970","night":"#273a4a","human":"#b87f62","robot":"#819994",
+    "skin":"#d4b399","cloth":"#7b8b87","shell":"#aebcb7","screen":"#8fa9a3",
+    "warmLight":"#f0d9a3","coldLight":"#c5d6d0"
+  },
+  "objects":{
+    "window":{"x":150,"y":106,"w":225,"h":292},
+    "desk":{"x":295,"y":487,"w":630,"h":35},
+    "person":{"x":490,"y":315,"scale":1},
+    "lamp":{"x":824,"y":367},
+    "plant":{"x":165,"y":520},
+    "phone":{"x":661,"y":409}
+  },
+  "dwellMs":1500,
+  "seed":1291,
+  "notes":"The same palette, room, person and detachable shell are shared by later acts. Do not regenerate these assets."
+}

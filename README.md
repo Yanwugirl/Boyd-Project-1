@@ -20,3 +20,13 @@ npm start
 Then open http://localhost:3000 in two windows. The creative coding lab is at http://localhost:3000/practice/.
 
 The Shared Circles tutorial was supplied by Boyd. The live examples were supplied with the Creative Coding lesson. Adaptations and tests are labelled in the exercise documentation. This repository is a study workspace, not a completed Project 1 game.
+
+## Game poem · Act I
+
+[Between Us · Act I](act-1/README.md) implements the domestic conversation, with two real players, p5 visuals, hand-selected phrases, Socket.IO rooms, and local Ollama interpretation (`x → y`).
+
+- [Chinese setup and design notes](act-1/设计说明与运行指南.md)
+- [Code references for classroom discussion](act-1/SOURCES.md)
+- [Shared assets for all three acts](act-1/ASSET_REUSE.md)
+
+From the `act-1` directory, run `npm ci`, then `npm run demo` for the labelled rehearsal or `npm start` for real local Ollama. Acts II and III are future work.

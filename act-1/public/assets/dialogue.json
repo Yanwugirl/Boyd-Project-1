@@ -1,0 +1,17 @@
+{
+  "version": "act1-2026-10-31-v1",
+  "phrases": [
+    {"id":"hello","text":"Are you there?"},
+    {"id":"day","text":"How was your day?"},
+    {"id":"here","text":"I am here with you."},
+    {"id":"tired","text":"I feel a little tired tonight."},
+    {"id":"time","text":"I need a little time."},
+    {"id":"listen","text":"Could you just listen for a while?"},
+    {"id":"miss","text":"I missed having someone to talk to."},
+    {"id":"different","text":"I do not always feel the same way."},
+    {"id":"stay","text":"Can we stay here a little longer?"},
+    {"id":"understand","text":"I am trying to understand you."},
+    {"id":"worry","text":"I am not sure what to say."},
+    {"id":"quiet","text":"Could we be quiet for a moment?"}
+  ]
+}
