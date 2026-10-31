@@ -6,7 +6,7 @@
   const room = params.get('room') || '';
   const newToken = () => Array.from(crypto.getRandomValues(new Uint8Array(24)), b => b.toString(16).padStart(2, '0')).join('');
   const quickPhrases = { hello: 'Are you there?', day: 'How was your day?', here: 'I am here with you.' };
-  let socket, state, modelReady = false, pending = false, pendingText = '', signature = '', typingTimer, statusTimer, toastTimer;
+  let socket, state, modelReady = false, pending = false, readyPending = false, pendingText = '', signature = '', typingTimer, statusTimer, toastTimer;
   function error(text) { $('send-error').textContent = text || ''; }
   function notify(text) { clearTimeout(toastTimer); $('toast').textContent = text; $('toast').hidden = false; toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4500); }
   function resize() { $('message-input').style.height = 'auto'; $('message-input').style.height = `${Math.min(105, $('message-input').scrollHeight)}px`; $('character-count').textContent = `${$('message-input').value.length} / 280`; }
@@ -17,8 +17,30 @@
     $('send-button').disabled = !canSend || !$('message-input').value.trim();
     document.querySelectorAll('[data-phrase]').forEach(b => { b.disabled = !canSend; });
     const me = state?.players.find(p => p?.role === state.role);
-    $('ready-button').disabled = !joined || state.busy || !state.players.every(p => p?.connected && p.sent >= 2);
-    $('ready-button').textContent = me?.ready ? 'Waiting for your partner…' : 'Continue together';
+    const partner = state?.players.find(p => p && p.role !== state.role);
+    const ended = state?.phase === 'act1-ended';
+    const canContinue = joined && !state.busy && !pending && !readyPending && state.players.every(p => p?.connected && p.sent >= 2);
+    const invited = joined && partner?.ready && !me?.ready;
+    $('ready-button').disabled = !canContinue || me?.ready;
+    $('ready-button').textContent = ended ? 'Act I complete' : me?.ready ? 'Waiting for your partner…' : invited ? 'Continue with your partner' : 'Continue together';
+    $('ready-button').classList.toggle('partner-ready', Boolean(invited));
+    $('ready-button').title = ended ? 'Both players have completed Act I.' : me?.ready ? 'Your partner has been notified. You can cancel using Keep chatting below.' : 'Both players must confirm to end Act I.';
+    $('continue-notice').hidden = !joined || (!me?.ready && !partner?.ready);
+    $('continue-notice').classList.toggle('awaiting-response', Boolean(invited));
+    $('continue-title').textContent = invited ? 'Your partner is ready to continue.' : 'You’re ready to continue.';
+    $('continue-description').textContent = invited ? 'They chose Continue together. Confirm when you’re ready; Act I ends only after you both agree.' : 'Your partner has been notified. Waiting for their confirmation. Choose Keep chatting to cancel your request.';
+    $('continue-action').textContent = invited ? 'Continue together' : 'Keep chatting';
+    $('continue-action').disabled = !canContinue;
+    document.title = ended ? 'Act I complete · Between Us' : invited ? 'Partner ready to continue · Between Us' : 'Between Us · Act I';
+  }
+  function chooseContinue(value) {
+    if (!socket?.connected || !state?.paired || state.phase !== 'act1' || state.busy || pending || readyPending) return;
+    error(''); readyPending = true; controls();
+    socket.timeout(8000).emit('ready', value, (err, result) => {
+      readyPending = false;
+      if (err || !result?.ok) error(result?.error || 'Your confirmation could not be sent. Check the connection and try again.');
+      controls();
+    });
   }
   function drawMessages() {
     if (!state) return;
@@ -48,9 +70,9 @@
     const p = next.player || (next.role === 'human' ? 1 : 2);
     $('player-label').textContent = `PLAYER ${p}`;
     $('self-avatar-letter') && ($('self-avatar-letter').textContent = String(p));
-    $('sidebar-status').textContent = `Player ${p} · ${next.paired ? 'Connected' : 'Waiting'}`;
+    $('sidebar-status').textContent = `Player ${p} · ${next.phase === 'act1-ended' ? 'Act I complete' : next.paired ? 'Connected' : 'Waiting'}`;
     $('partner-name').textContent = p === 2 ? 'Companion' : 'Someone';
-    $('connection-status').textContent = next.paired ? next.busy ? 'A message is on its way…' : 'Connected · Say hello' : 'Waiting for your partner';
+    $('connection-status').textContent = next.phase === 'act1-ended' ? 'Act I complete · Both players confirmed' : next.paired ? next.busy ? 'A message is on its way…' : 'Connected · Say hello' : 'Waiting for your partner';
     $('partner-dot').classList.toggle('connected', next.paired);
     $('people-count').textContent = next.paired ? '2 participants' : '1 participant';
     $('opening-title').textContent = p === 1 ? 'An ordinary conversation.' : 'Your companion is here.';
@@ -59,14 +81,14 @@
     $('room-label').textContent = `Room: ${next.room} · Player ${p}`;
     $('live-details').hidden = false;
     $('info-mode').textContent = `You are Player ${p}. The other participant controls their own window. This is Act I of the two-player experience.`;
-    $('act-status').textContent = `Act I · Player ${p}`;
+    $('act-status').textContent = next.phase === 'act1-ended' ? `Act I complete · Player ${p}` : `Act I · Player ${p}`;
     $('waiting').hidden = next.paired || next.phase !== 'act1'; $('messages').hidden = !next.paired; $('conversation-start').hidden = !next.paired || next.messages.length > 0;
     $('waiting-title').textContent = next.messages.length ? 'Connection paused.' : `Waiting for Player ${p === 1 ? 2 : 1}…`;
     $('waiting-description').textContent = next.messages.length ? 'Your partner can return to the same link.' : 'Open the other player link from the setup page to begin.';
     $('cancel-search').textContent = 'Back to test setup';
     $('act-ending').hidden = next.phase !== 'act1-ended';
     if (next.phase === 'act1-ended') GestureInput.stop();
-    if (!next.paired) $('typing').hidden = true;
+    if (!next.paired || next.phase !== 'act1') $('typing').hidden = true;
     $('preview-notice').hidden = next.mode === 'ollama' && modelReady;
     $('preview-notice-text').textContent = next.mode === 'direct' ? 'Connection test · Messages arrive unchanged. Ollama is not used.' : next.mode === 'scripted' ? 'Rehearsal · Preset phrases use fixed interpretations. Ollama is not used.' : modelReady ? 'Local Ollama is ready.' : 'Checking local Ollama…';
     drawMessages(); controls();
@@ -92,7 +114,7 @@
     }));
     socket.on('state', next => { const first = !state; render(next); if (first) checkStatus(); });
     socket.on('typing', active => { $('typing').hidden = !active || !state?.paired || state?.phase !== 'act1'; });
-    socket.on('disconnect', () => { if (state) state.paired = false; $('connection-status').textContent = 'Reconnecting…'; $('typing').hidden = true; controls(); });
+    socket.on('disconnect', () => { if (state) state.paired = false; if (state?.phase !== 'act1-ended') $('connection-status').textContent = 'Reconnecting…'; $('partner-dot').classList.remove('connected'); $('typing').hidden = true; controls(); });
     socket.on('connect_error', () => error('The server could not be reached. Keep the terminal open.'));
     socket.connect();
   }
@@ -110,7 +132,8 @@
   $('message-input').addEventListener('input', () => { resize(); controls(); if (socket?.connected && state?.paired) { socket.emit('typing', true); clearTimeout(typingTimer); typingTimer = setTimeout(() => socket?.connected && socket.emit('typing', false), 1400); } });
   $('message-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (!$('send-button').disabled) send($('message-input').value); } });
   document.querySelectorAll('[data-phrase]').forEach(b => b.addEventListener('click', () => send(quickPhrases[b.dataset.phrase], b.dataset.phrase)));
-  $('ready-button').addEventListener('click', () => { const me = state.players.find(p => p?.role === state.role); socket.emit('ready', !me.ready, result => { if (!result.ok) error(result.error); }); });
+  $('ready-button').addEventListener('click', () => chooseContinue(true));
+  $('continue-action').addEventListener('click', () => chooseContinue(!state.players.find(p => p?.role === state.role)?.ready));
   $('find-button').addEventListener('click', () => { if (!state) return; const target = state.role === 'human' ? 2 : 1; window.open(`/player${target}.html?room=${encodeURIComponent(state.room)}`, '_blank', 'noopener'); });
   $('cancel-search').addEventListener('click', () => { location.href = '/'; });
   $('end-button').addEventListener('click', () => { socket?.disconnect(); clearInterval(statusTimer); GestureInput.stop(); location.href = '/'; });

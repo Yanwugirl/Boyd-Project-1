@@ -22,3 +22,11 @@ Checked 31 October 2026. This is a test build, not a replacement of Backup 1.
 ## Backup status
 
 Backup 1 and the previous published interface preview are unchanged. Jiaming will test this complete build before deciding whether to replace Backup 1.
+# Continue notification update (v2)
+
+The 31 October user test on Windows confirmed a real local gemma3:1b probe, four messages delivered in Ollama mode, and the shared Act I ending. The supplied audit shows substantial semantic drift and a repeated interpretation for different inputs. Output quality remains a separate item for review.
+
+This update changes only the player interface: a persistent, high-contrast continue request with a confirmation action; the initiator's cancellation action; a recipient tab-title reminder; and completed labels in the header, sidebar, footer and tab title. The server and model prompt are unchanged.
+
+Validated with the existing syntax checks and all 10 automated tests. Browser QA used a direct-mode room with two real browser clients to isolate the interface behavior: each player contributed two messages; Player 1 initiated; both views showed their respective states; cancellation removed both notices; Player 2 initiated; a reload preserved the partner's request; confirmation completed both views and cleared the request. No new model inference is claimed for this interface-only check. Physical two-computer networking remains untested here.
+

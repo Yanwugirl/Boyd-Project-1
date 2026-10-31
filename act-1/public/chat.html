@@ -8,8 +8,8 @@
   <link rel="stylesheet" href="style.css?v=act1-complete">
   <script defer src="/socket.io/socket.io.js"></script>
   <script defer src="gesture.js"></script>
-  <script defer src="app.js?v=act1-complete"></script>
-<link rel="stylesheet" href="complete.css"></head>
+  <script defer src="app.js?v=act1-continue-v2"></script>
+<link rel="stylesheet" href="complete.css?v=act1-continue-v2"></head>
 <body>
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 11.3a8 8 0 0 1-8 7.7 9 9 0 0 1-3.2-.6L4 20l1.4-4.6A7.5 7.5 0 0 1 4 11.3a8 8 0 0 1 16 0Z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></symbol>
@@ -37,6 +37,11 @@
   <main class="chat" aria-label="One-to-one chat">
     <header class="chat-header"><div class="partner"><div class="partner-avatar"><span>?</span><i id="partner-dot"></i></div><div><h1 id="partner-name">Stranger</h1><p id="connection-status">Connecting…</p></div></div><div class="header-actions"><span class="two-people"><svg><use href="#i-people"/></svg><span id="people-count">Just the two of you</span></span><span class="header-divider"></span><button id="ready-button" class="end-button" disabled>Continue together</button><button id="end-button" class="end-button">Leave chat</button><button id="info-button" class="icon-button" aria-label="About this conversation"><svg><use href="#i-info"/></svg></button></div></header>
     <div id="preview-notice" class="preview-notice" hidden><span class="preview-dot"></span><span id="preview-notice-text">Interface preview · The conversation below is an example.</span><button id="refresh-player-status" title="Refresh connection">Check</button></div>
+    <section id="continue-notice" class="continue-notice" role="status" aria-live="polite" aria-atomic="true" hidden>
+      <span class="continue-symbol" aria-hidden="true"><svg><use href="#i-people"/></svg></span>
+      <div class="continue-copy"><h2 id="continue-title"></h2><p id="continue-description"></p></div>
+      <button id="continue-action" class="continue-action" type="button">Continue together</button>
+    </section>
     <section class="chat-body" id="chat-body" aria-label="Messages">
       <div class="conversation-start" id="conversation-start"><span class="start-icon"><svg><use href="#i-chat"/></svg></span><h2 id="opening-title">A conversation starts with hello.</h2><p id="opening-description">Waiting for your connection.</p></div>
       <div id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
