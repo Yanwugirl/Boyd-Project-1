@@ -1,56 +1,10 @@
-<!doctype html>
-<html lang="en" data-preview="false">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#222a28">
-  <title>Between Us — A conversation for two</title>
-  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=chat-2">
-  <script defer src="/socket.io/socket.io.js"></script>
-  <script defer src="gesture.js"></script>
-  <script defer src="app.js?v=chat-2"></script>
-</head>
-<body>
-<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
-  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 11.3a8 8 0 0 1-8 7.7 9 9 0 0 1-3.2-.6L4 20l1.4-4.6A7.5 7.5 0 0 1 4 11.3a8 8 0 0 1 16 0Z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></symbol>
-  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
-  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M12 5v14"/></symbol>
-  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
-  <symbol id="i-link" viewBox="0 0 24 24"><path d="m9 15 6-6M10 6l2-2a5 5 0 0 1 7 7l-2 2M14 18l-2 2a5 5 0 0 1-7-7l2-2"/></symbol>
-  <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4v2"/></symbol>
-  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
-  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
-  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 12V6a2 2 0 0 1 4 0v6M12 11V4a2 2 0 0 1 4 0v8M16 11V7a2 2 0 0 1 4 0v8c0 5-3 7-7 7-3 0-5-1-7-4l-3-5a2 2 0 0 1 3-2l2 2M8 12v3"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
-</defs></svg>
-<div class="app-shell">
-  <aside class="sidebar" aria-label="Chat navigation">
-    <a class="brand" href="./"><span class="brand-symbol"><svg><use href="#i-chat"/></svg></span><span>between us<span class="brand-caption">a little space to connect</span></span></a>
-    <button id="find-button" class="find-button"><svg><use href="#i-plus"/></svg>Find someone to talk to</button>
-    <p class="nav-heading">CONVERSATION</p>
-    <div class="conversation-link active"><span class="nav-avatar"><svg><use href="#i-chat"/></svg></span><span><strong>One-to-one chat</strong><small id="sidebar-status">Take a look around</small></span><span class="nav-active-dot"></span></div>
-    <div class="sidebar-space"></div>
-    <section class="sidebar-note"><span class="note-mark">“</span><h2>Strangers, for now.</h2><p>You don't need a profile or a perfect introduction.<br>A hello is enough.</p><div class="note-dots"><span></span><span></span><span></span></div></section>
-    <details class="room-tools"><summary>Have a room code?<svg><use href="#i-right"/></svg></summary><form id="join-form"><label class="sr-only" for="room-input">Room code</label><input id="room-input" maxlength="36" placeholder="Enter room code" autocomplete="off" required><button aria-label="Join room" type="submit"><svg><use href="#i-right"/></svg></button></form><button id="copy-link" class="sidebar-text-button" hidden><svg><use href="#i-link"/></svg>Copy this room's link</button><p id="room-error" role="alert"></p></details>
-    <div class="self-profile"><span class="self-avatar">Y<span></span></span><span><strong>You</strong><small>Anonymous guest</small></span><span class="self-label">YOU</span></div>
-  </aside>
-  <main class="chat" aria-label="One-to-one chat">
-    <header class="chat-header"><div class="partner"><div class="partner-avatar"><span>?</span><i id="partner-dot"></i></div><div><h1 id="partner-name">Stranger</h1><p id="connection-status">Example conversation</p></div></div><div class="header-actions"><span class="two-people"><svg><use href="#i-people"/></svg><span id="people-count">Just the two of you</span></span><span class="header-divider"></span><button id="end-button" class="end-button">End chat</button><button id="info-button" class="icon-button" aria-label="About this conversation"><svg><use href="#i-info"/></svg></button></div></header>
-    <div id="preview-notice" class="preview-notice"><span class="preview-dot"></span><span id="preview-notice-text">Interface preview · The conversation below is an example.</span><button id="reset-preview" title="Reset example conversation" aria-label="Reset example conversation">Reset</button></div>
-    <section class="chat-body" id="chat-body" aria-label="Messages">
-      <div class="conversation-start" id="conversation-start"><span class="start-icon"><svg><use href="#i-chat"/></svg></span><h2>A conversation starts with hello.</h2><p>Two people. One moment. See where it goes.</p></div>
-      <div id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
-      <div id="waiting" class="waiting" hidden><span class="waiting-rings"><span></span><span></span><svg><use href="#i-people"/></svg></span><h2 id="waiting-title">Looking for someone…</h2><p id="waiting-description">Your conversation will begin when another person joins.</p><button id="cancel-search" class="secondary-button">Cancel search</button></div>
-      <div id="typing" class="typing" hidden><span></span><span></span><span></span><small>Stranger is typing</small></div>
-    </section>
-    <section class="composer-section" aria-label="Write a message"><div class="composer-width"><div class="suggestions"><span class="suggestion-label">Break the ice</span><button class="suggestion" data-phrase="hello" data-gesture>Are you there?</button><button class="suggestion" data-phrase="day" data-gesture>How was your day?</button><button class="suggestion" data-phrase="here" data-gesture>I am here with you.</button><button id="camera-toggle" class="icon-button hand-button" aria-label="Use hand gestures" title="Use hand gestures"><svg><use href="#i-hand"/></svg></button></div>
-      <form id="message-form" class="message-form"><label for="message-input" class="sr-only">Your message</label><textarea id="message-input" placeholder="Write a message…" rows="1" maxlength="280"></textarea><button id="send-button" type="submit" aria-label="Send message"><svg><use href="#i-arrow"/></svg></button></form>
-      <div class="composer-meta"><span id="input-help">Enter to send <span class="meta-dot">·</span> Shift + Enter for a new line</span><span id="character-count">0 / 280</span></div><p id="send-error" class="send-error" role="alert"></p>
-    </div></section>
-    <footer class="chat-footer"><span class="tiny-dot"></span>A small space for a real conversation.<span class="footer-credit">Jiaming &amp; Sam</span></footer>
-  </main>
-</div>
-<div id="toast" class="toast" role="status" hidden></div>
-<dialog id="info-dialog" class="info-dialog"><button id="close-info" class="dialog-close icon-button" aria-label="Close information"><svg><use href="#i-close"/></svg></button><span class="dialog-symbol"><svg><use href="#i-chat"/></svg></span><h2>A little space for two.</h2><p>Start a conversation with someone new, or share a room code to meet in the same chat.</p><p id="info-mode">You're viewing a sample conversation. Messages you write in the preview stay in this window.</p><div id="live-details" hidden><p id="room-label"></p><p id="engine-status"></p><button id="refresh-status" class="secondary-button">Check connection</button></div><button id="close-info-bottom" class="dialog-primary">Back to the conversation</button></dialog>
-<div id="hand-cursor" class="hand-cursor" hidden aria-hidden="true"><svg viewBox="0 0 52 52"><circle class="cursor-track" cx="26" cy="26" r="22"/><circle id="dwell-ring" cx="26" cy="26" r="22"/></svg><span></span></div>
-</body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Between Us · Act I Test Setup</title><link rel="icon" href="assets/icon.svg"><link rel="stylesheet" href="studio.css"><script defer src="studio.js"></script></head><body>
+<header class="topbar"><a href="/" class="brand">between us<span>ACT I / COMPLETE TEST</span></a><span class="test-label">Development version · Backup 1 is preserved</span></header>
+<main class="studio"><div class="intro"><span class="eyebrow">TWO PEOPLE. TWO WINDOWS. ONE CONVERSATION.</span><h1>Set up your first act.</h1><p>Create a room, open both player views, then let the words travel.</p></div>
+<div class="setup-grid"><section class="card"><div class="card-heading"><span class="number">01</span><h2>Check the connection</h2><button id="refresh" class="small-button">Refresh</button></div><div class="health-row"><span id="server-dot" class="status-dot"></span><strong>Conversation server</strong><span id="server-status">Checking…</span></div><div class="health-row"><span id="ollama-dot" class="status-dot"></span><strong>Local Ollama</strong><span id="ollama-status">Checking…</span></div><p id="setup-detail" class="muted">Ollama runs on the computer hosting this page.</p>
+<div class="form-grid"><label>Message mode<select id="mode"><option value="ollama">Ollama · interpret each message</option><option value="direct">Connection test · send unchanged</option><option value="scripted">Rehearsal · fixed interpretations</option></select></label><label>Local model<select id="model"><option>qwen2.5:1.5b</option></select></label></div><details class="help"><summary>Set up Ollama on Windows</summary><p>Install and open <a href="https://ollama.com/download" target="_blank" rel="noopener">Ollama</a>. In a terminal, download a small model:</p><code>ollama pull qwen2.5:1.5b</code><p>Then click Refresh. You only need Ollama on the server computer.</p></details>
+<div class="model-test"><label for="test-input">Try one message before opening the room</label><div class="test-line"><input id="test-input" maxlength="280" value="I need a little time."><button id="test-model" class="secondary">Test Ollama</button></div><div id="model-result" class="model-result" hidden><span id="model-result-label"></span><p id="model-output"></p></div></div></section>
+<section class="card"><div class="card-heading"><span class="number">02</span><h2>Create a two-player room</h2></div><p class="card-intro">Player 1 opens a familiar conversation. Player 2 enters through a companion interface. Both people write their own messages.</p><div class="mode-note"><span>x</span><span>Your words</span><b>→</b><span>Interpretation</span><b>→</b><span>Other player</span></div><button id="create-session" class="primary">Create test session <span>↗</span></button><p id="create-error" class="error" role="alert"></p><p class="muted">The model interprets a real player's words. It does not invent the other player's answer.</p><div class="pair-status"><div><span id="p1-dot" class="status-dot"></span><strong>Player 1</strong><span id="p1-state">Not opened</span></div><div><span id="p2-dot" class="status-dot"></span><strong>Player 2</strong><span id="p2-state">Not opened</span></div></div></section></div>
+<section id="session" class="session-card" hidden><div class="session-title"><div><span class="eyebrow">YOUR TEST ROOM</span><h2 id="session-name"></h2></div><span id="session-mode" class="pill"></span></div><div class="player-grid"><div class="player-card player-one"><span class="player-label">PLAYER 1</span><h3>The familiar conversation</h3><p>Your own words on your side. Your partner's delivered words on the other.</p><a id="open-p1" class="player-button" target="_blank" rel="noopener">Open Player 1 ↗</a><button id="copy-p1" class="copy-button">Copy Player 1 link</button></div><div class="player-card player-two"><span class="player-label">PLAYER 2</span><h3>The companion connection</h3><p>A different identity cue, connected to the same live conversation.</p><a id="open-p2" class="player-button" target="_blank" rel="noopener">Open Player 2 ↗</a><button id="copy-p2" class="copy-button">Copy Player 2 link</button></div></div><div class="session-bottom"><a id="open-split" class="secondary" target="_blank" rel="noopener">Open both players side by side ↗</a><p>Use one view per player in a room. Close a player's existing view before reopening that seat.</p></div><details id="network-help" class="help"><summary>Use two different computers</summary><p>Open these links on the other computer on the same network. Keep this server running.</p><div id="lan-links"></div><p>On a university network, device isolation may block the connection. A personal hotspot can be used instead.</p></details></section>
+<section id="record-section" class="card record-card" hidden><div class="card-heading"><span class="number">03</span><h2>Watch the message journey</h2><span class="muted">Test setup only</span></div><p class="muted">Compare what was written (x) with what reached the other player (y). This record is not shown inside the player views.</p><div id="processing" class="processing" hidden>Interpreting a message…</div><div id="records" class="records"><p class="empty-record">Send a message from either player to see its journey here.</p></div><p id="phase-label" class="muted"></p></section>
+<footer>Jiaming &amp; Sam · Creative Technologies · Project 1</footer></main><div id="toast" class="toast" role="status" hidden></div></body></html>

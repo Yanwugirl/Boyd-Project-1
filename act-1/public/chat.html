@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en" data-preview="false">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#222a28">
+  <title>Between Us · Act I</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=act1-complete">
+  <script defer src="/socket.io/socket.io.js"></script>
+  <script defer src="gesture.js"></script>
+  <script defer src="app.js?v=act1-complete"></script>
+<link rel="stylesheet" href="complete.css"></head>
+<body>
+<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 11.3a8 8 0 0 1-8 7.7 9 9 0 0 1-3.2-.6L4 20l1.4-4.6A7.5 7.5 0 0 1 4 11.3a8 8 0 0 1 16 0Z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M12 5v14"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="m9 15 6-6M10 6l2-2a5 5 0 0 1 7 7l-2 2M14 18l-2 2a5 5 0 0 1-7-7l2-2"/></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4v2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 12V6a2 2 0 0 1 4 0v6M12 11V4a2 2 0 0 1 4 0v8M16 11V7a2 2 0 0 1 4 0v8c0 5-3 7-7 7-3 0-5-1-7-4l-3-5a2 2 0 0 1 3-2l2 2M8 12v3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+</defs></svg>
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Chat navigation">
+    <a class="brand" href="./"><span class="brand-symbol"><svg><use href="#i-chat"/></svg></span><span>between us<span class="brand-caption">a little space to connect</span></span></a>
+    <button id="find-button" class="find-button"><svg><use href="#i-plus"/></svg>Find someone to talk to</button>
+    <p class="nav-heading">CONVERSATION</p>
+    <div class="conversation-link active"><span class="nav-avatar"><svg><use href="#i-chat"/></svg></span><span><strong>One-to-one chat</strong><small id="sidebar-status">Act I · Not connected</small></span><span class="nav-active-dot"></span></div>
+    <div class="sidebar-space"></div>
+    <section class="sidebar-note"><span class="note-mark">“</span><h2>Strangers, for now.</h2><p>You don't need a profile or a perfect introduction.<br>A hello is enough.</p><div class="note-dots"><span></span><span></span><span></span></div></section>
+    <details class="room-tools"><summary>Have a room code?<svg><use href="#i-right"/></svg></summary><form id="join-form"><label class="sr-only" for="room-input">Room code</label><input id="room-input" maxlength="36" placeholder="Enter room code" autocomplete="off" required><button aria-label="Join room" type="submit"><svg><use href="#i-right"/></svg></button></form><button id="copy-link" class="sidebar-text-button" hidden><svg><use href="#i-link"/></svg>Copy this room's link</button><p id="room-error" role="alert"></p></details>
+    <div class="self-profile"><span class="self-avatar">Y<span></span></span><span><strong>You</strong><small>Anonymous guest</small></span><span id="player-label" class="self-label">PLAYER</span></div>
+  </aside>
+  <main class="chat" aria-label="One-to-one chat">
+    <header class="chat-header"><div class="partner"><div class="partner-avatar"><span>?</span><i id="partner-dot"></i></div><div><h1 id="partner-name">Stranger</h1><p id="connection-status">Connecting…</p></div></div><div class="header-actions"><span class="two-people"><svg><use href="#i-people"/></svg><span id="people-count">Just the two of you</span></span><span class="header-divider"></span><button id="ready-button" class="end-button" disabled>Continue together</button><button id="end-button" class="end-button">Leave chat</button><button id="info-button" class="icon-button" aria-label="About this conversation"><svg><use href="#i-info"/></svg></button></div></header>
+    <div id="preview-notice" class="preview-notice" hidden><span class="preview-dot"></span><span id="preview-notice-text">Interface preview · The conversation below is an example.</span><button id="refresh-player-status" title="Refresh connection">Check</button></div>
+    <section class="chat-body" id="chat-body" aria-label="Messages">
+      <div class="conversation-start" id="conversation-start"><span class="start-icon"><svg><use href="#i-chat"/></svg></span><h2 id="opening-title">A conversation starts with hello.</h2><p id="opening-description">Waiting for your connection.</p></div>
+      <div id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <div id="waiting" class="waiting" hidden><span class="waiting-rings"><span></span><span></span><svg><use href="#i-people"/></svg></span><h2 id="waiting-title">Looking for someone…</h2><p id="waiting-description">Your conversation will begin when another person joins.</p><button id="cancel-search" class="secondary-button">Cancel search</button></div>
+      <div id="typing" class="typing" hidden><span></span><span></span><span></span><small>Stranger is typing</small></div>
+    </section>
+    <section class="composer-section" aria-label="Write a message"><div class="composer-width"><div class="suggestions"><span class="suggestion-label">Break the ice</span><button class="suggestion" data-phrase="hello" data-gesture>Are you there?</button><button class="suggestion" data-phrase="day" data-gesture>How was your day?</button><button class="suggestion" data-phrase="here" data-gesture>I am here with you.</button><button id="camera-toggle" class="icon-button hand-button" aria-label="Use hand gestures" title="Use hand gestures"><svg><use href="#i-hand"/></svg></button></div>
+      <form id="message-form" class="message-form"><label for="message-input" class="sr-only">Your message</label><textarea id="message-input" placeholder="Write a message…" rows="1" maxlength="280"></textarea><button id="send-button" type="submit" aria-label="Send message"><svg><use href="#i-arrow"/></svg></button></form>
+      <div class="composer-meta"><span id="input-help">Enter to send <span class="meta-dot">·</span> Shift + Enter for a new line</span><span id="character-count">0 / 280</span></div><p id="send-error" class="send-error" role="alert"></p>
+    </div></section>
+    <footer class="chat-footer"><span class="tiny-dot"></span><span id="act-status">Act I · A conversation for two</span><span class="footer-credit">Jiaming &amp; Sam</span></footer>
+  <div id="act-ending" class="act-ending" hidden><p>ACT I COMPLETE</p><h2>Something is about to change.</h2><span>Both of you are ready to leave this conversation.</span><a href="/" class="secondary-button">Back to test setup</a></div></main>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<dialog id="info-dialog" class="info-dialog"><button id="close-info" class="dialog-close icon-button" aria-label="Close information"><svg><use href="#i-close"/></svg></button><span class="dialog-symbol"><svg><use href="#i-chat"/></svg></span><h2>A little space for two.</h2><p>Start a conversation with someone new, or share a room code to meet in the same chat.</p><p id="info-mode">Your messages travel to the other participant. Each person controls their own side of the conversation.</p><div id="live-details"><p id="room-label"></p><p id="engine-status"></p><button id="refresh-status" class="secondary-button">Check connection</button></div><button id="close-info-bottom" class="dialog-primary">Back to the conversation</button></dialog>
+<div id="hand-cursor" class="hand-cursor" hidden aria-hidden="true"><svg viewBox="0 0 52 52"><circle class="cursor-track" cx="26" cy="26" r="22"/><circle id="dwell-ring" cx="26" cy="26" r="22"/></svg><span></span></div>
+</body></html>

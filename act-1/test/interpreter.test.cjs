@@ -19,11 +19,13 @@ test('the Ollama adapter sends x in a user message, reads message.content as y, 
   assert.equal((await interpreter.status()).ready, true);
   const result = await interpreter.interpret('I am here.');
   assert.equal(request.model, 'test-local'); assert.equal(request.stream, false);
-  assert.deepEqual(JSON.parse(request.messages[1].content), { x: 'I am here.' });
+  assert.ok(request.messages[1].content.includes(JSON.stringify('I am here.')));
+  assert.match(request.messages[1].content, /Do not reply/);
   assert.match(request.messages[0].content, /abstract interpretation/);
   assert.equal(result.y, 'A light at the window.'); assert.equal(result.engine, 'ollama');
   output = 'not JSON'; await assert.rejects(interpreter.interpret('Hi'), /JSON/);
   output = '{"y":""}'; await assert.rejects(interpreter.interpret('Hi'), /empty/);
+  output = '{"y":"the rewritten line"}'; await assert.rejects(interpreter.interpret('Hi')); 
   output = JSON.stringify({ y: 'x'.repeat(481) }); await assert.rejects(interpreter.interpret('Hi'), /overlong/);
 });
 

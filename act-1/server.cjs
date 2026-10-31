@@ -3,6 +3,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const http = require('node:http');
 const crypto = require('node:crypto');
+const os = require('node:os');
 const express = require('express');
 const { Server } = require('socket.io');
 const { createInterpreter } = require('./lib/interpreter.cjs');
@@ -12,6 +13,7 @@ const phrases = new Map(phraseData.phrases.map(p => [p.id, p.text]));
 function createGame(options = {}) {
   const interpreter = options.interpreter || createInterpreter({ mode: options.mode });
   const app = express();
+  app.use(express.json({ limit: '8kb' }));
   app.disable('x-powered-by');
   app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); next(); });
   const server = http.createServer(app);
@@ -22,7 +24,52 @@ function createGame(options = {}) {
   const reclaimAfter = options.reclaimAfter || 10 * 60 * 1000;
   const clock = options.clock || Date.now;
   app.get('/health', (req, res) => res.json({ ok: true, act: 1, mode: interpreter.mode }));
-  app.get('/api/status', async (req, res) => res.json(await interpreter.status()));
+  const validModel = value => typeof value === 'string' && /^[a-zA-Z0-9._:/-]{1,120}$/.test(value);
+  const makeEngine = settings => options.interpreter || createInterpreter({ mode: settings.mode || interpreter.mode, model: settings.model || interpreter.model, url: options.ollamaUrl });
+  const engineOf = room => room.engine || interpreter;
+  const freshRoom = (id, engine = interpreter) => ({ id, phase: 'act1', players: [null, null], messages: [], busy: false, touched: clock(), engine, hostToken: crypto.randomBytes(24).toString('hex'), pending: null });
+  const port = () => server.address()?.port || Number(process.env.PORT || 3000);
+  const lanAddresses = () => { try { return Object.values(os.networkInterfaces()).flat().filter(n => n && n.family === 'IPv4' && !n.internal).map(n => `http://${n.address}:${port()}`); } catch { return []; } };
+  const getOllama = model => createInterpreter({ mode: 'ollama', model: validModel(model) ? model : interpreter.model, url: options.ollamaUrl });
+  app.get('/api/status', async (req, res) => {
+    const room = rooms.get(req.query.room);
+    res.json(await (room ? engineOf(room) : interpreter).status());
+  });
+  app.get('/api/setup', async (req, res) => res.json({
+    ok: true, defaultModel: interpreter.model || 'qwen2.5:1.5b',
+    ollama: await getOllama(req.query.model).status(), lanAddresses: lanAddresses()
+  }));
+  let modelTestBusy = false;
+  app.post('/api/model-test', async (req, res) => {
+    if (req.get('origin') && req.get('origin') !== `${req.protocol}://${req.get('host')}`) return res.status(403).json({ ok: false, error: 'Open this test from the local server.' });
+    const { text, model } = req.body || {};
+    if (typeof text !== 'string' || !text.trim() || text.length > 280 || !validModel(model)) return res.status(400).json({ ok: false, error: 'Choose a model and enter 1–280 characters.' });
+    if (modelTestBusy) return res.status(409).json({ ok: false, error: 'A model test is already running. Please wait.' });
+    modelTestBusy = true; const start = clock();
+    try { const output = await getOllama(model).interpret(text.trim()); res.json({ ok: true, x: text.trim(), ...output, model, durationMs: clock() - start }); }
+    catch (e) { res.status(503).json({ ok: false, error: e.name === 'TimeoutError' ? 'Ollama took too long. Try again after the model loads.' : e.message || 'Ollama could not be reached.' }); }
+    finally { modelTestBusy = false; }
+  });
+  app.post('/api/sessions', (req, res) => {
+    if (req.get('origin') && req.get('origin') !== `${req.protocol}://${req.get('host')}`) return res.status(403).json({ ok: false, error: 'Create the test from this server.' });
+    cleanRooms();
+    if (rooms.size >= maxRooms) return res.status(503).json({ ok: false, error: 'All rooms are busy.' });
+    const { mode = 'ollama', model = interpreter.model || 'qwen2.5:1.5b' } = req.body || {};
+    if (!['ollama', 'direct', 'scripted'].includes(mode) || !validModel(model)) return res.status(400).json({ ok: false, error: 'Choose a supported mode and model.' });
+    const id = `act1-${crypto.randomBytes(6).toString('hex')}`;
+    const room = freshRoom(id, makeEngine({ mode, model })); rooms.set(id, room);
+    res.status(201).json({ ok: true, room: id, hostToken: room.hostToken, mode, model: mode === 'ollama' ? model : null,
+      player1: `/player1.html?room=${id}`, player2: `/player2.html?room=${id}`, split: `/dual.html?room=${id}`, lanAddresses: lanAddresses() });
+  });
+  app.get('/api/sessions/:id/inspect', (req, res) => {
+    const room = rooms.get(req.params.id); const token = req.get('x-act1-host-token') || '';
+    if (!room || !/^[a-f0-9]{48}$/.test(token) || !crypto.timingSafeEqual(Buffer.from(token), Buffer.from(room.hostToken))) return res.status(403).json({ ok: false, error: 'Open the original test setup page to view this record.' });
+    res.json({ ok: true, room: room.id, mode: engineOf(room).mode, model: engineOf(room).mode === 'ollama' ? engineOf(room).model : null,
+      phase: room.phase, busy: room.busy, pending: room.pending,
+      players: room.players.map((p, i) => ({ player: i + 1, connected: isPresent(p), sent: p?.sent || 0, ready: p?.ready || false })),
+      messages: room.messages.map(m => ({ ...m, player: m.from === 'human' ? 1 : 2 })) });
+  });
+  app.get(['/player1.html', '/player2.html'], (req, res) => res.sendFile(path.join(__dirname, 'public/chat.html')));
   // Production dependencies are served locally; no CDN is needed for p5 drawing.
   app.use('/vendor/p5', express.static(path.join(__dirname, 'public/vendor/p5')));
   app.use(express.static(path.join(__dirname, 'public')));
@@ -31,12 +78,12 @@ function createGame(options = {}) {
   function roomState(room, player) {
     return {
       room: room.id, role: player.role, phase: room.phase, busy: room.busy,
-      mode: interpreter.mode, paired: room.players.every(isPresent),
+      mode: engineOf(room).mode, model: engineOf(room).mode === 'ollama' ? engineOf(room).model : null, player: player.role === 'human' ? 1 : 2, pending: room.pending ? { from: room.pending.from } : null, paired: room.players.every(isPresent),
       players: room.players.map(p => p ? ({ role: p.role, connected: isPresent(p), ready: p.ready, sent: p.sent }) : null),
       // Keep the other player's x private until Act II exists. Never broadcast the audit array.
       messages: room.messages.map(m => m.from === player.role
-        ? { id: m.id, kind: 'sent', text: m.x, at: m.at, delivered: true }
-        : { id: m.id, kind: 'received', text: m.y, tone: m.tone, at: m.at })
+        ? { id: m.id, kind: 'sent', text: m.x, at: m.at, delivered: true, engine: m.engine, durationMs: m.durationMs }
+        : { id: m.id, kind: 'received', text: m.y, tone: m.tone, at: m.at, engine: m.engine })
     };
   }
   function publish(room) {
@@ -69,14 +116,16 @@ function createGame(options = {}) {
       let room = rooms.get(id);
       if (!room) {
         if (rooms.size >= maxRooms) { ack({ ok: false, error: 'All rooms are busy. Please try again later.' }); return; }
-        room = { id, phase: 'act1', players: [null, null], messages: [], busy: false, touched: clock() };
+        room = freshRoom(id);
         rooms.set(id, room);
       }
       let player = room.players.find(p => p?.token === token);
       if (player && isPresent(player)) { ack({ ok: false, error: 'This seat is already open. Use the second-player link for another window.' }); return; }
       if (!player) {
         // Only reclaim a disconnected seat after the grace period. Never evict a live player.
-        let slot = room.players.findIndex(p => !p);
+        const requested = data.player === 1 || data.player === 2 ? data.player - 1 : null;
+        if (requested !== null && room.players[requested]) { ack({ ok: false, error: `Player ${requested + 1} is already open. Close that window or create a new test session.` }); return; }
+        let slot = requested !== null ? requested : room.players.findIndex(p => !p);
         if (slot < 0) slot = room.players.findIndex(p => !isPresent(p) && clock() - p.offlineAt > reclaimAfter);
         if (slot < 0) { ack({ ok: false, error: 'This room has two seats. Rejoin your own seat or choose a new room.' }); return; }
         if (room.players[slot]) {
@@ -131,13 +180,14 @@ function createGame(options = {}) {
       if (!x || x.length > 280) { ack({ ok: false, error: 'Choose a phrase or write 1–280 characters.' }); return; }
       if (player.lastMessageAt && clock() - player.lastMessageAt < 500) { ack({ ok: false, error: 'Give the words a moment.' }); return; }
       if (room.messages.length >= 80) { ack({ ok: false, error: 'This conversation is full. Start a new room.' }); return; }
-      player.lastMessageAt = clock(); room.busy = true; room.touched = clock(); publish(room);
+      player.lastMessageAt = clock(); room.busy = true; room.pending = { from: player.role, x, at: clock() }; room.touched = clock(); publish(room);
+      const inferenceStart = clock();
       try {
         // x = the real player's input. y = an interpretation of x, not an invented partner reply.
-        const { y, tone, engine } = await interpreter.interpret(x, phraseId);
+        const { y, tone, engine } = await engineOf(room).interpret(x, phraseId);
         if (typeof y !== 'string' || !y.trim() || y.length > 480) throw new Error('The interpretation was not readable.');
         if (rooms.get(room.id) !== room) throw new Error('This room has closed.');
-        room.messages.push({ id: crypto.randomUUID(), from: player.role, x, y: y.trim(), tone, engine, at: clock() });
+        room.messages.push({ id: crypto.randomUUID(), from: player.role, x, y: y.trim(), tone, engine, at: clock(), durationMs: clock() - inferenceStart });
         player.sent += 1; player.ready = false;
         for (const p of room.players) if (p) p.ready = false;
         ack({ ok: true });
@@ -147,7 +197,7 @@ function createGame(options = {}) {
         ack({ ok: false, error: timeout ? 'The local model took too long. Please retry.' : offline
           ? 'Ollama is not running on the server computer. Open it and try again.'
           : 'The local model could not interpret this message. Check Ollama and retry.' });
-      } finally { room.busy = false; room.touched = clock(); publish(room); }
+      } finally { room.busy = false; room.pending = null; room.touched = clock(); publish(room); }
     });
 
     socket.on('presence', data => {

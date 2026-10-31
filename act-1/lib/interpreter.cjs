@@ -7,24 +7,25 @@ const tones = new Set(['warm', 'distant', 'hesitant', 'curious', 'quiet']);
 // The classroom version keeps x and y named exactly as in Boyd's diagram.
 function createInterpreter(options = {}) {
   const mode = options.mode || process.env.INTERPRETER || 'ollama';
-  if (!['ollama', 'scripted'].includes(mode)) throw new Error('INTERPRETER must be ollama or scripted.');
-  const model = options.model || process.env.OLLAMA_MODEL || 'llama3.2:1b';
+  if (!['ollama', 'scripted', 'direct'].includes(mode)) throw new Error('INTERPRETER must be ollama, scripted or direct.');
+  const model = options.model || process.env.OLLAMA_MODEL || 'qwen2.5:1.5b';
   const base = (options.url || process.env.OLLAMA_URL || 'http://127.0.0.1:11434').replace(/\/$/, '');
   const timeout = Number(options.timeout || process.env.OLLAMA_TIMEOUT_MS || 90000);
   async function interpret(x, phraseId) {
+    if (mode === 'direct') return { y: x, tone: 'quiet', engine: 'direct' };
     if (mode === 'scripted') return { ...scripted(x, phraseId), engine: 'scripted' };
     const response = await fetch(`${base}/api/chat`, {
       method: 'POST', signal: AbortSignal.timeout(timeout),
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model, stream: false,
+        model, stream: false, keep_alive: '5m',
         format: {
           type: 'object', properties: {
             y: { type: 'string' }, tone: { type: 'string', enum: [...tones] }
           }, required: ['y', 'tone'], additionalProperties: false
         },
-        messages: [{ role: 'system', content: prompt }, { role: 'user', content: JSON.stringify({ x }) }],
-        options: { temperature: 0.45, num_predict: 160, num_ctx: 2048 }
+        messages: [{ role: 'system', content: prompt }, { role: 'user', content: `Rewrite this exact line, keeping its original request, feeling or question: ${JSON.stringify(x)}\nDo not reply to it. Keep what the speaker wants or asks, with a simple domestic image.` }],
+        options: { temperature: 0.2, num_predict: 160, num_ctx: 2048 }
       })
     });
     if (!response.ok) throw new Error('Ollama did not accept the request. Check that the selected model is downloaded.');
@@ -33,19 +34,19 @@ function createInterpreter(options = {}) {
     try { decoded = JSON.parse(data.message?.content || ''); }
     catch { throw new Error('Ollama returned unreadable JSON. Please try the message again.'); }
     const y = typeof decoded.y === 'string' ? decoded.y.trim() : '';
-    if (!y || y.length > 480) throw new Error('Ollama returned an empty or overlong interpretation. Please retry.');
+    if (!y || y.length > 480 || /^(the rewritten line|the transformed sentence|the rewritten message)$/i.test(y)) throw new Error('Ollama returned an empty or overlong interpretation. Please retry.');
     return { y, tone: tones.has(decoded.tone) ? decoded.tone : 'quiet', engine: 'ollama' };
   }
   async function status() {
-    if (mode === 'scripted') return { mode, model: null, ready: true };
+    if (mode === 'scripted' || mode === 'direct') return { mode, model: null, ready: true };
     try {
       const response = await fetch(`${base}/api/tags`, { signal: AbortSignal.timeout(3500) });
       if (!response.ok) throw new Error('Ollama is not responding.');
       const data = await response.json();
       const ready = (data.models || []).some(m => m.name === model || m.model === model || m.name === `${model}:latest`);
-      return { mode, model, ready, detail: ready ? 'Local model ready.' : `Download the model first: ollama pull ${model}` };
+      return { mode, model, ready, reachable: true, models: (data.models || []).map(m => ({ name: m.name || m.model, size: m.size })), detail: ready ? 'Local model ready.' : `Download the model first: ollama pull ${model}` };
     } catch {
-      return { mode, model, ready: false, detail: 'Open Ollama on the server computer, then refresh this status.' };
+      return { mode, model, ready: false, reachable: false, models: [], detail: 'Open Ollama on the server computer, then refresh this status.' };
     }
   }
   return { mode, model, interpret, status };

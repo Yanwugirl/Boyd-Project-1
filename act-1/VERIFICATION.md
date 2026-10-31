@@ -1,28 +1,24 @@
-# Verification · 31 October 2026
+# Complete Act I · Verification
+
+Checked 31 October 2026. This is a test build, not a replacement of Backup 1.
 
 ## Completed
 
-- `npm ci` completed with the pinned dependency lockfile; JavaScript syntax checks passed.
-- Seven automated tests passed. They open real WebSocket Socket.IO clients against the Node server and check role order, distinct rooms, private x/y views, occupied-seat rejection, disconnected sending, reconnection, contribution gates, the two-person ending, input validation, and model-error retry.
-- The Ollama adapter was tested against a local HTTP fixture: `/api/tags`, structured `/api/chat`, `stream: false`, reading `message.content`, malformed JSON, empty output and overlong output.
-- In the cloud browser, two live tabs joined one room as human/robot, exchanged messages in both directions, and displayed the sender's original line and the recipient's transformed line. This browser run used **labelled scripted rehearsal mode**.
-- Refreshing the first tab restored its role and transcript. Both tabs separately chose to leave and reached **End of Act I**.
-- The actual p5 room, person and robot-shell views were visually inspected in the browser. The final source-backed visual preview was also inspected.
-- The hand library's pinned `ml5@1.3.1` release and the cited official p5/ml5 HandPose API were checked. The camera requires a secure context; plain LAN HTTP is supported for mouse messages.
-- SVG exports and p5 primitive data share the same coordinates. Asset SHA-256 checks are included in the handoff manifest.
+- Ten automated tests cover real Socket.IO connections, original/transformed message separation, room isolation, explicit Player 1/Player 2 seats even when Player 2 enters first, reconnection, invalid data, model failures, setup/session APIs, protected test inspection and the shared ending.
+- JavaScript syntax checks pass for the server, interpreter, chat clients, setup page and retained p5/hand code.
+- In the cloud browser, two separate tabs opened Player 2 and Player 1, showed their different identity cues, exchanged freely typed text and quick phrases in the explicitly labelled direct-connection mode, and completed Act I after both confirmed Continue together. The setup page displayed the actual message record.
+- Actual local Ollama inference was also tested with a real downloaded model and the Node application, using two WebSocket clients. This includes an HTTP model probe, four messages crossing both ways and the shared Act I ending. Exact model/version, timings and outputs are recorded in TEST_RESULTS_REAL_OLLAMA.json. These results do not use a mock model.
+- Earlier vector source assets were checked against ASSET_MANIFEST.json and retained unchanged.
 
-## Still requires Jiaming's computer / hardware
+## Practical limits
 
-- No actual Ollama model was installed or run in this executor. The adapter fixture is not proof of real model wording, speed, or instruction following. Use `npm start` with Ollama open and the model downloaded, then compare the two screens.
-- Physical webcam/hand tracking, dwell accuracy and camera permission on the two intended devices need an actual hand and those devices. They were not claimed as hardware-tested.
-- The two browser tabs are a real end-to-end browser/network exercise, not a test across two physical computers or university Wi-Fi. LAN firewall and network isolation need local confirmation.
-- The page contains responsive CSS; no physical mobile-device test was performed.
-- Acts II and III are intentionally future work. The first-act ending is a stopping point, not a completed second-act transition.
+- These tests took place in the executor, not on Jiaming's Windows computer or on two physical devices on university Wi-Fi. The Windows command files are supplied and reviewed but have not been executed on Windows here.
+- The actual model test uses the model named in TEST_RESULTS_REAL_OLLAMA.json. Other models can be selected on the setup page; their wording, speed and interpretation quality can differ. A small model can change the meaning more than intended. The x/y comparison makes this visible for review. This is not a guarantee of faithful paraphrasing for every message.
+- The browser run used the direct-connection mode. The real Ollama run used the same server/application with two programmatic WebSocket clients, not the two browser tabs.
+- Physical camera tracking and hand-dwell accuracy require local hardware verification. Ordinary text input works over local HTTP; webcam use requires localhost or HTTPS.
+- Rooms and messages are held in memory. Restarting the server removes them.
+- Acts II and III are not part of this Act I build. The ending stops at the threshold of the next act.
 
-## Implementation choices to discuss
+## Backup status
 
-The working title, short-sentence palette, 1.5-second dwell, abstraction prompt, symmetric filtering and minimum two messages per player are prototype choices. They can be revised without replacing the shared visual asset set.
-
-## Chatroom revision
-
-The illustrated player page was replaced with a standard chatroom after Jiaming clarified the intended experience. The sidebar, message history, always-visible textarea, send action, searching state and end-chat state were reviewed. Eight tests pass, including real stranger matching that excludes invite-code rooms. Two browser tabs were paired through the find button and exchanged freely typed messages in both directions in the labelled rehearsal mode. The separately hosted interface preview uses sample messages and does not offer live stranger matching. The retained illustration assets remain available but are not displayed in this interface.
+Backup 1 and the previous published interface preview are unchanged. Jiaming will test this complete build before deciding whether to replace Backup 1.
