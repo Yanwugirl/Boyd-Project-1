@@ -58,8 +58,8 @@
     },
     {
       "path": "VERIFICATION.md",
-      "bytes": 3787,
-      "sha256": "e962301aaeb1b0ddd715f7ff7ba22cc0a30ac6755e29bce6d1129f5dc688aeae"
+      "bytes": 4894,
+      "sha256": "0451cca11f06daa9903548859287c1d919371c410b1dc4f4fdb4bc8bfa02e919"
     },
     {
       "path": "lib/interpreter.cjs",
@@ -183,8 +183,8 @@
     },
     {
       "path": "public/index.html",
-      "bytes": 5579,
-      "sha256": "bc645dbcb8ba5fb48c627e953db029a16af9183139aaffe6174de5edb74ea99c"
+      "bytes": 5915,
+      "sha256": "09146d888188a7f9787f504abd22be7f4d6f43cebd652b945355ced2232e53fa"
     },
     {
       "path": "public/scene.js",
@@ -193,13 +193,13 @@
     },
     {
       "path": "public/studio.css",
-      "bytes": 7612,
-      "sha256": "94480a3c36a3fc0e24c09bb5f4449905e47c17300a705091cff5113790fe7f98"
+      "bytes": 8149,
+      "sha256": "601a39f1658494f81df332f95d863d91428e82ea0223933701b559a51359c6fc"
     },
     {
       "path": "public/studio.js",
-      "bytes": 8241,
-      "sha256": "47c6c49547ab3889ee7d9e64323c69aa835cb5cb704677e1a7f6a24817b534ec"
+      "bytes": 9329,
+      "sha256": "f54ecf0183eb014934d68bb21f77c082cb893836cf8e006765206df320bcbb99"
     },
     {
       "path": "public/style.css",
@@ -258,8 +258,8 @@
     },
     {
       "path": "先读我.md",
-      "bytes": 5553,
-      "sha256": "e3cc139e039859da38ebd2d12a7b8e094f30af9072177ae71306c6d0d5b6c349"
+      "bytes": 6297,
+      "sha256": "846c8ca3642d15c7c35f8d32cc3467815afdb46e3fab317a633cd499553ec134"
     },
     {
       "path": "设计说明与运行指南.md",
@@ -267,6 +267,6 @@
       "sha256": "8d02121d89851c494c15496a15acd442c4b5a59973e07e9bd8f460a45e3d0005"
     }
   ],
-  "update": "Continue notification v2; Backup 1 remains preserved",
-  "updatedAt": "2026-10-31"
+  "update": "v2: continue notifications and LAN player links; Backup 1 preserved",
+  "updatedAt": "2026-11-01"
 }

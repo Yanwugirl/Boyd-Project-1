@@ -30,3 +30,11 @@ This update changes only the player interface: a persistent, high-contrast conti
 
 Validated with the existing syntax checks and all 10 automated tests. Browser QA used a direct-mode room with two real browser clients to isolate the interface behavior: each player contributed two messages; Player 1 initiated; both views showed their respective states; cancellation removed both notices; Player 2 initiated; a reload preserved the partner's request; confirmation completed both views and cleared the request. No new model inference is claimed for this interface-only check. Physical two-computer networking remains untested here.
 
+# LAN player links update
+
+The user confirmed in v1 that a Windows computer and phone could join through the same LAN after creating a fresh room. Testing with Sam's second computer at university is still pending.
+
+The v2 setup now uses the detected LAN origin for the main player buttons, visible player URLs, copy actions and split view when opened from localhost. When opened from an existing LAN or hosted address it preserves that origin. Hostnames are detected at runtime, so a different network does not keep a hardcoded 10.27.137.111 address.
+
+Validation: syntax checks and the existing 10 automated tests pass. The actual setup JavaScript was exercised in an isolated DOM fixture matching the real setup HTML: room creation, both main links, both visible links, both copy actions and the split link all used http://10.27.137.111:3000 with the generated room ID. Address selection was also checked for loopback, changed LAN address, existing LAN origin, hosted origin and absent LAN detection. This is link-generation verification, not a new claim of physical network access from this environment.
+

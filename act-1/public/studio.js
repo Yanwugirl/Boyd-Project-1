@@ -39,12 +39,23 @@
     finally { loadingTest = false; modelHealth(); }
   }
   function absolute(path, base = location.origin) { return new URL(path, base).href; }
+  function playerOrigin(data) {
+    const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+    // When setup is opened on localhost, share the server's current LAN address.
+    // On a LAN or public URL, keep the address the organiser already used.
+    return local ? (data.lanAddresses?.[0] || location.origin) : location.origin;
+  }
   function showSession(data) {
     session = data; lastRecords = '';
     $('session').hidden = false; $('record-section').hidden = false;
     $('session-name').textContent = data.room;
     $('session-mode').textContent = data.mode === 'ollama' ? `Ollama · ${data.model}` : data.mode === 'direct' ? 'Direct connection test' : 'Scripted rehearsal';
-    $('open-p1').href = data.player1; $('open-p2').href = data.player2; $('open-split').href = data.split;
+    const origin = playerOrigin(data);
+    $('open-p1').href = absolute(data.player1, origin); $('open-p2').href = absolute(data.player2, origin); $('open-split').href = absolute(data.split, origin);
+    $('player-link-origin').textContent = origin;
+    const localOnly = ['localhost', '127.0.0.1', '[::1]'].includes(new URL(origin).hostname);
+    $('player-link-help').textContent = localOnly ? 'No LAN address was detected. Open Use two different computers below for connection guidance.' : 'Both player buttons and copy links use this address. For two devices, use one player per device on the same network.';
+    for (const p of [1, 2]) { const link = $(`player-${p}-address`); link.href = $(`open-p${p}`).href; link.textContent = link.href; }
     $('lan-links').replaceChildren();
     for (const origin of data.lanAddresses || []) {
       const line = document.createElement('p'); line.style.marginBottom = '14px';
@@ -86,7 +97,7 @@
       }
     } catch { $('phase-label').textContent = 'Connection to the test server paused.'; }
   }
-  async function copyLink(field) { if (!session) return; const link = absolute(session[field]); try { await navigator.clipboard.writeText(link); toast('Player link copied.'); } catch { toast(link); } }
+  async function copyLink(field) { if (!session) return; const link = $(field === 'player1' ? 'open-p1' : 'open-p2').href; try { await navigator.clipboard.writeText(link); toast('Player link copied.'); } catch { toast('Select and copy the full player address shown below its button.'); } }
   $('refresh').addEventListener('click', refresh); $('model').addEventListener('change', modelHealth); $('mode').addEventListener('change', modelHealth);
   $('test-model').addEventListener('click', testModel); $('create-session').addEventListener('click', createSession);
   $('copy-p1').addEventListener('click', () => copyLink('player1')); $('copy-p2').addEventListener('click', () => copyLink('player2'));
