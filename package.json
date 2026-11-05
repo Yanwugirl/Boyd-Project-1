@@ -1,0 +1,25 @@
+{
+  "name": "between-us-project-one",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Between Us: a complete three-act two-person networked game poem",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env tools/start.cjs",
+    "dev": "node --env-file-if-exists=.env tools/dev.cjs",
+    "demo": "node --env-file-if-exists=.env server.cjs --demo",
+    "test": "node --test test/*.test.cjs",
+    "check": "node --check server.cjs && node --check lib/interpreter.cjs && node --check lib/journey.cjs && node --check public/app.js && node --check public/experience.js && node --check public/acts/act2.mjs && node --check public/scene.js && node --check public/gesture.js && node --check public/studio.js && node --check lib/act2.cjs && node --check public/acts/act3.mjs && node --check lib/act3.cjs",
+    "doctor": "node --env-file-if-exists=.env tools/doctor.cjs"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "socket.io": "4.8.4"
+  },
+  "devDependencies": {
+    "socket.io-client": "4.8.4"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-10-31T07:08:41.934Z",
+  "kind": "Real local Ollama inference, not a fixture",
+  "ollamaVersion": "0.40.13",
+  "model": "qwen2.5:1.5b",
+  "modelProbe": {
+    "x": "I need a little time.",
+    "y": "I need a little room before opening the door.",
+    "durationMs": 4372
+  },
+  "twoPlayerRoundTrip": true,
+  "explicitSeatOrderTested": true,
+  "act1Completed": true,
+  "messages": [
+    {
+      "player": 1,
+      "x": "Are you there?",
+      "y": "Are you there?",
+      "engine": "ollama",
+      "durationMs": 985
+    },
+    {
+      "player": 2,
+      "x": "I am here with you.",
+      "y": "I am here by your side.",
+      "engine": "ollama",
+      "durationMs": 1135
+    },
+    {
+      "player": 1,
+      "x": "I need a little time.",
+      "y": "I need a little room before opening the door.",
+      "engine": "ollama",
+      "durationMs": 1139
+    },
+    {
+      "player": 2,
+      "x": "I am trying to understand you.",
+      "y": "I am trying to understand you.",
+      "engine": "ollama",
+      "durationMs": 1435
+    }
+  ],
+  "scope": "Performed in the executor with two WebSocket clients. Jiaming's Windows installation and two physical devices still require local confirmation."
+}

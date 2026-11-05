@@ -1,0 +1,19 @@
+{
+  "bounds": { "left": 0.08, "right": 0.92, "top": 0.1, "bottom": 0.9 },
+  "wallX": 0.5,
+  "doorHalfHeight": 0.065,
+  "playerRadius": 0.023,
+  "speed": 0.28,
+  "doors": [
+    { "id": "triangle", "glyph": "△", "name": "triangle", "y": 0.28 },
+    { "id": "circle", "glyph": "○", "name": "circle", "y": 0.5 },
+    { "id": "wave", "glyph": "≈", "name": "wave", "y": 0.72 }
+  ],
+  "spawns": { "human": { "x": 0.22, "y": 0.75 }, "robot": { "x": 0.78, "y": 0.75 } },
+  "rounds": [
+    { "operator": "human", "guide": "robot", "pad": { "x": 0.8, "y": 0.5 }, "goal": { "x": 0.81, "y": 0.2 }, "title": "Make room to listen" },
+    { "operator": "robot", "guide": "human", "pad": { "x": 0.2, "y": 0.5 }, "goal": { "x": 0.19, "y": 0.2 }, "title": "Let the other person lead" }
+  ],
+  "keySlots": { "human": { "x": 0.43, "y": 0.28 }, "robot": { "x": 0.57, "y": 0.28 } },
+  "keyHoldMs": 1600
+}

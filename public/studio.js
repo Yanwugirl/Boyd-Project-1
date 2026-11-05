@@ -1,0 +1,123 @@
+'use strict';
+(() => {
+  const $ = id => document.getElementById(id);
+  let session, timer, toastTimer, setup, lastRecords = '', loadingTest = false;
+  function toast(text) { clearTimeout(toastTimer); $('toast').textContent = text; $('toast').hidden = false; toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4500); }
+  function endpoint(path, body) { return fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}).then(async r => { const data = await r.json(); if (!r.ok || data.ok === false) throw new Error(data.error || 'Request failed.'); return data; }); }
+  function modelHealth() {
+    if (!setup) return;
+    const found = setup.ollama.models?.some(m => m.name === $('model').value || m.name === `${$('model').value}:latest`);
+    $('ollama-dot').className = `status-dot ${setup.ollama.reachable && found ? 'good' : 'bad'}`;
+    $('ollama-status').textContent = !setup.ollama.reachable ? 'Not running' : found ? 'Ready' : 'Model not downloaded';
+    $('setup-detail').textContent = !setup.ollama.reachable ? 'Open Ollama on this server computer, then click Refresh.' : found ? `Model available: ${$('model').value}` : `Download this model: ollama pull ${$('model').value}`;
+    $('test-model').disabled = !found || !setup.ollama.reachable || loadingTest;
+    $('model').disabled = $('mode').value !== 'ollama';
+    const ready = $('mode').value !== 'ollama' || (setup.ollama.reachable && found);
+    $('create-session').disabled = !ready;
+    $('launch-status').textContent = ready ? 'Ready for two' : 'Connection needs attention';
+    $('launch-status').classList.toggle('ready', Boolean(ready));
+  }
+  async function refresh() {
+    $('refresh').disabled = true;
+    try {
+      setup = await endpoint('/api/setup');
+      $('server-dot').className = 'status-dot good'; $('server-status').textContent = 'Connected'; $('create-session').disabled = false;
+      const before = $('model').value; const names = [...new Set([setup.defaultModel, ...(setup.ollama.models || []).map(m => m.name)])];
+      $('model').replaceChildren();
+      for (const name of names) { const option = document.createElement('option'); option.value = name; option.textContent = name; $('model').append(option); }
+      $('model').value = setup.ollama.models?.some(m => m.name === before) ? before : setup.ollama.models?.[0]?.name || setup.defaultModel;
+      modelHealth();
+    } catch (e) {
+      $('server-dot').className = 'status-dot bad'; $('server-status').textContent = 'Not connected'; $('setup-detail').textContent = 'Start the server with START_ACT1.cmd, then return to this page.';
+      $('create-session').disabled = true; $('test-model').disabled = true; $('launch-status').textContent = 'Server not connected'; $('connection-settings').open = true;
+    } finally { $('refresh').disabled = false; }
+  }
+  async function testModel() {
+    loadingTest = true; modelHealth();
+    $('model-result').hidden = false; $('model-result').classList.remove('failed'); $('model-result-label').textContent = 'Sending x to local Ollama…'; $('model-output').textContent = 'The first request may take longer while the model loads.';
+    try {
+      const result = await endpoint('/api/model-test', { model: $('model').value, text: $('test-input').value.trim() });
+      $('model-result-label').textContent = `Real Ollama response · ${(result.durationMs / 1000).toFixed(1)} seconds · y`;
+      $('model-output').textContent = result.y;
+    } catch (e) { $('model-result').classList.add('failed'); $('model-result-label').textContent = 'Message check did not complete'; $('model-output').textContent = e.message; }
+    finally { loadingTest = false; modelHealth(); }
+  }
+  function absolute(path, base = location.origin) { return new URL(path, base).href; }
+  function playerOrigin(data) {
+    const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+    // When setup is opened on localhost, share the server's current LAN address.
+    // On a LAN or public URL, keep the address the organiser already used.
+    return local ? (data.lanAddresses?.[0] || location.origin) : location.origin;
+  }
+  function showSession(data) {
+    session = data; lastRecords = '';
+    $('session').hidden = false; $('record-section').hidden = false;
+    $('session-name').textContent = data.room;
+    $('session-mode').textContent = 'One room · three acts';
+    const origin = playerOrigin(data);
+    $('open-p1').href = absolute(data.player1, origin); $('open-p2').href = absolute(data.player2, origin); $('open-split').href = absolute(data.split, origin);
+    $('player-link-origin').textContent = origin;
+    const localOnly = ['localhost', '127.0.0.1', '[::1]'].includes(new URL(origin).hostname);
+    $('player-link-help').textContent = localOnly ? 'No LAN address was detected. Open Use two different computers below for connection guidance.' : 'Both player buttons and copy links use this address. For two devices, use one player per device on the same network.';
+    for (const p of [1, 2]) { const link = $(`player-${p}-address`); link.href = $(`open-p${p}`).href; link.textContent = link.href; }
+    $('lan-links').replaceChildren();
+    for (const origin of data.lanAddresses || []) {
+      const line = document.createElement('p'); line.style.marginBottom = '14px';
+      for (const [title, path] of [['Player 1', data.player1], ['Player 2', data.player2]]) { const a = document.createElement('a'); a.href = absolute(path, origin); a.textContent = `${title}: ${a.href}`; a.target = '_blank'; a.rel = 'noopener'; line.append(a); }
+      $('lan-links').append(line);
+    }
+    try { sessionStorage.setItem('between-us-session', JSON.stringify(data)); } catch {}
+    clearInterval(timer); poll(); timer = setInterval(poll, 1300);
+  }
+  async function createSession() {
+    $('create-session').disabled = true; $('create-error').textContent = '';
+    try {
+      const result = await endpoint('/api/sessions', { mode: $('mode').value, model: $('model').value });
+      showSession(result); $('session').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) { $('create-error').textContent = e.message; }
+    finally { modelHealth(); }
+  }
+  async function poll() {
+    if (!session) return;
+    try {
+      const r = await fetch(`/api/sessions/${encodeURIComponent(session.room)}/inspect`, { headers: { 'x-act1-host-token': session.hostToken } });
+      if (!r.ok) { clearInterval(timer); $('phase-label').textContent = 'This room has closed or the server restarted. Create a new room.'; return; }
+      const data = await r.json();
+      for (const p of data.players) { $(`p${p.player}-dot`).className = `status-dot ${p.connected ? 'good' : ''}`; $(`p${p.player}-state`).textContent = p.connected ? `Connected · ${p.sent} sent${p.ready ? ' · ready' : ''}` : 'Not connected'; }
+      $('processing').hidden = !data.busy;
+      $('processing').textContent = data.pending ? `Interpreting Player ${data.pending.from === 'human' ? 1 : 2}'s message…` : 'Interpreting a message…';
+      const act = data.journey?.act || 'act1';
+      document.querySelectorAll('[data-act]').forEach(el => {
+        const current = el.dataset.act === act;
+        el.classList.toggle('current', current); el.classList.toggle('completed', Boolean(data.journey?.completed.includes(el.dataset.act)));
+        if (current) el.setAttribute('aria-current', 'step'); else el.removeAttribute('aria-current');
+      });
+      const phase = data.phase === 'complete' ? 'All three acts are complete. Both players chose to close the conversation.' : data.phase === 'act2-ended' ? 'Both players chose to continue. The next scene is opening together.' : data.phase === 'act1-ended' ? 'Both players chose to continue. Waiting for both scene views to load.' : act === 'act2' ? 'Both players are in the cooperative room. Their progress stays together.' : act === 'act3' ? 'The final conversation is open. Both players choose when to close together.' : 'The conversation is open. Both players choose when to move forward.';
+      $('phase-label').textContent = phase; $('journey-status').textContent = phase;
+      const signature = JSON.stringify(data.messages);
+      if (signature !== lastRecords) {
+        lastRecords = signature; $('records').replaceChildren();
+        if (!data.messages.length) { const p = document.createElement('p'); p.className = 'empty-record'; p.textContent = 'Send a message from either player to see its journey here.'; $('records').append(p); }
+        for (const m of data.messages) {
+          const record = document.createElement('article'); record.className = 'record';
+          const meta = document.createElement('div'); meta.className = 'record-meta'; meta.textContent = `Player ${m.player} → Player ${m.player === 1 ? 2 : 1} · ${m.engine}${m.durationMs !== undefined ? ` · ${(m.durationMs / 1000).toFixed(1)}s` : ''}`;
+          const body = document.createElement('div'); body.className = 'record-body';
+          for (const [label, text] of [['x · Original words', m.x], ['y · Delivered words', m.y]]) { const col = document.createElement('div'); const title = document.createElement('strong'); title.textContent = label; const p = document.createElement('p'); p.textContent = text; col.append(title, p); body.append(col); }
+          record.append(meta, body); $('records').append(record);
+        }
+      }
+    } catch { $('phase-label').textContent = 'Connection to the room paused.'; }
+  }
+  async function copyLink(field) { if (!session) return; const link = $(field === 'player1' ? 'open-p1' : 'open-p2').href; try { await navigator.clipboard.writeText(link); toast('Player link copied.'); } catch { toast('Select and copy the full player address shown below its button.'); } }
+  $('refresh').addEventListener('click', refresh); $('model').addEventListener('change', modelHealth); $('mode').addEventListener('change', modelHealth);
+  $('test-model').addEventListener('click', testModel); $('create-session').addEventListener('click', createSession);
+  $('copy-p1').addEventListener('click', () => copyLink('player1')); $('copy-p2').addEventListener('click', () => copyLink('player2'));
+  $('launch-join-form').addEventListener('submit', event => {
+    event.preventDefault(); const room = $('launch-room-code').value.trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9-]{1,35}$/.test(room)) { $('launch-join-error').textContent = 'Enter the full room code from your invitation.'; return; }
+    location.href = '/play.html?room=' + encodeURIComponent(room);
+  });
+  refresh();
+  try { const saved = JSON.parse(sessionStorage.getItem('between-us-session')); if (saved?.room && saved?.hostToken) showSession(saved); } catch {}
+  window.addEventListener('pagehide', () => clearInterval(timer));
+})();

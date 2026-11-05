@@ -1,0 +1,32 @@
+{
+  "version": 3,
+  "acts": [
+    {
+      "id": "act1",
+      "number": "I",
+      "title": "A conversation",
+      "next": "act2",
+      "module": null,
+      "enabled": true
+    },
+    {
+      "id": "act2",
+      "number": "II",
+      "title": "Between the words",
+      "next": "act3",
+      "module": "/acts/act2.mjs",
+      "enabled": true,
+      "hint": "Move on the floor · cooperate through the signal panel"
+    },
+    {
+      "id": "act3",
+      "number": "III",
+      "title": "The words are yours",
+      "next": null,
+      "module": "/acts/act3.mjs",
+      "enabled": true,
+      "scope": "complete",
+      "hint": "A little space to speak freely."
+    }
+  ]
+}

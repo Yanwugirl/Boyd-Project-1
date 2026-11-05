@@ -1,0 +1,380 @@
+{
+  "name": "Between Us Project 1 — Complete Acts I, II and III",
+  "version": "1.0.0",
+  "build": "v6",
+  "date": "2026-11-04",
+  "status": "Complete three-act local build with focused Act II partner notices",
+  "defaultModel": "qwen2.5:1.5b",
+  "previousBackupSha256": "e53e657a21ed591b5d28622e8d1c90ddc354ec558377164e413fe063efa8c534",
+  "baseBuildSha256": "ec0c9c4024847aa76e9c77f2e95e8e6c11b4c634ccbf8931a3c81100fa3ad8fe",
+  "update": "Persistent partner-ready notices for entering Act II and exchanging roles; all other application behavior retained",
+  "files": [
+    {
+      "path": ".env.example",
+      "bytes": 126,
+      "sha256": "31306735bd4f21ac242dc41fc46c614a50766a66c90ba80acf6f07dd0987495e"
+    },
+    {
+      "path": ".node-version",
+      "bytes": 3,
+      "sha256": "68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53"
+    },
+    {
+      "path": "ACT2_设计与试玩说明.md",
+      "bytes": 5947,
+      "sha256": "efd7f98b8ffbcfa5a56a657b454fef4f8c570354678e1157a495d9ca97f9ba2e"
+    },
+    {
+      "path": "ACT3_交流与完整流程.md",
+      "bytes": 3100,
+      "sha256": "7eaa7be722cb6cd3adf1ec1e38f8369b8e0ec0d694767df8020a90aa0c078672"
+    },
+    {
+      "path": "ASSET_MANIFEST.json",
+      "bytes": 2652,
+      "sha256": "30e2c2e8357d1c4aff9b82bf5dc814b8eddb5230aefcd0fd68d1a46520ecc249"
+    },
+    {
+      "path": "ASSET_REUSE.md",
+      "bytes": 2588,
+      "sha256": "6c413f1db7d4cd2e92110331daf19fc965d85bfbdaa6aa0e78ce024249ca71d5"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3532,
+      "sha256": "5ad64ec4de7b97b192fa0c520436d9d78d626373089435b46ec0d8b4fdfdfe65"
+    },
+    {
+      "path": "SCENE_INTEGRATION.md",
+      "bytes": 3334,
+      "sha256": "c7183fa79edf99cdebd94f30c9c5d008dc752d22e874566eeeef778c462da60b"
+    },
+    {
+      "path": "SETUP_OLLAMA.cmd",
+      "bytes": 475,
+      "sha256": "f08fe714ba7f03df86c97ca0c268998bf03cd5277cb074bd1635080b8af30470"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 7848,
+      "sha256": "2d7e2344744d8f1eef20ac4d045a17cb49270e3c297dd56708b0ac40e079e496"
+    },
+    {
+      "path": "START_ACT1.cmd",
+      "bytes": 454,
+      "sha256": "3b52afaf3decde971d212dcad67391eefbd323eb9f7ff3997ca64ccc906b889c"
+    },
+    {
+      "path": "START_PROJECT1.cmd",
+      "bytes": 39,
+      "sha256": "f544f1721fe5810b3f8c2bbc5982642094ebfec7ff0d249d7255e228e70c9d90"
+    },
+    {
+      "path": "TEST_RESULTS_REAL_OLLAMA.json",
+      "bytes": 1212,
+      "sha256": "ddb2c399a8e7dcc236a89a608d9b7d57479e9ff2432c730bc179c461db2c1ffb"
+    },
+    {
+      "path": "UPDATE_CONTINUE_V2.md",
+      "bytes": 800,
+      "sha256": "aef05f64034f31e3e5fd8c26f1628f18c51097569d59cc68254866454af82cfd"
+    },
+    {
+      "path": "VERIFICATION.md",
+      "bytes": 6348,
+      "sha256": "8c6ae233f601c1791c9924576489f01d0d98de173c5687e6581bf1cb58d8f999"
+    },
+    {
+      "path": "lib/act2.cjs",
+      "bytes": 7260,
+      "sha256": "4b8381d1ec185c14cea83d5d761e9b5bc719c73c1f4cc3837600dcd379660a3f"
+    },
+    {
+      "path": "lib/act3.cjs",
+      "bytes": 4256,
+      "sha256": "23991497c9221c07a023cc48d47fa2ab1c38a1ecef1b76877ff7b333d106255f"
+    },
+    {
+      "path": "lib/interpreter.cjs",
+      "bytes": 4725,
+      "sha256": "2729850b476db07741372d68abfe3493eed7e8ef7b3efd695c0c3419af1f10f2"
+    },
+    {
+      "path": "lib/journey.cjs",
+      "bytes": 1502,
+      "sha256": "519b3661791d0305f4bcb7e605013d6d478213e321cab0fd473ef297669a8b89"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 40233,
+      "sha256": "7bc4d4aa7033c5f33257d640ab2b2f6c77361f743fe1f221073e6ab8b4c977fa"
+    },
+    {
+      "path": "package.json",
+      "bytes": 1078,
+      "sha256": "70a0d638f114f5993ada14d4f5cc07419ea3bc1d179cf3984d6b8a1aaee5da0b"
+    },
+    {
+      "path": "prompts/abstract.txt",
+      "bytes": 653,
+      "sha256": "adfeadaca57d4adfe777b546cc3ab6e37c9de26c62fe3dd8fa2257a8e40f512c"
+    },
+    {
+      "path": "public/acts/act2-layout.json",
+      "bytes": 888,
+      "sha256": "d3b4cdc4fc0b5604a8fed8f9bd28ad1eda931cdfa58abb479d324894ab7f052a"
+    },
+    {
+      "path": "public/acts/act2.css",
+      "bytes": 7177,
+      "sha256": "b51a63d141d6c73f413dd73924691f39c862c30dd7f656c0b7ed57c14b035edf"
+    },
+    {
+      "path": "public/acts/act2.mjs",
+      "bytes": 21290,
+      "sha256": "f276190041500c213cfb3f784aa953088aa0d2f550c78d67f8fa41fe2396fc31"
+    },
+    {
+      "path": "public/acts/act3.css",
+      "bytes": 10292,
+      "sha256": "139a7242ce2521310df7ed3a4455cea8e9aad5c7a74683c101786e2b1034f64b"
+    },
+    {
+      "path": "public/acts/act3.mjs",
+      "bytes": 17259,
+      "sha256": "b18d8149ff8439d38f4bb81d94480ef5f745762f2fd437c6cdf9f476373097d2"
+    },
+    {
+      "path": "public/acts/manifest.json",
+      "bytes": 676,
+      "sha256": "097298dba2f3aab9aafe002846fb7e7a1444ebe6bed35c20306691cc0866429d"
+    },
+    {
+      "path": "public/app.js",
+      "bytes": 13882,
+      "sha256": "87ebbf2c2e9eec89cef2c8335c7615e462a1ffd8cf1dee793c5716757e603b88"
+    },
+    {
+      "path": "public/assets.html",
+      "bytes": 3522,
+      "sha256": "f0f3a83560ba0cff03a752c9cf4fb16b2b268517e6a16a4052f6d47773d6fdad"
+    },
+    {
+      "path": "public/assets/design-tokens.json",
+      "bytes": 771,
+      "sha256": "b3630f4e53bc6b7af07578c8726f2ee24b4dd0102a08ec211a394e37102da298"
+    },
+    {
+      "path": "public/assets/dialogue.json",
+      "bytes": 745,
+      "sha256": "e0f3c0618c5404d0b91aaa455bfc399e2c8f9415c9302394038cc30f7e3781e4"
+    },
+    {
+      "path": "public/assets/icon.svg",
+      "bytes": 239,
+      "sha256": "6929f2cff65dc93d28fd84a9fdd9cd74db7ac69c6769b48fa120df87cc7d15eb"
+    },
+    {
+      "path": "public/assets/svg/chair.svg",
+      "bytes": 807,
+      "sha256": "d5eecbabe88b6c820a95eda7dcedae376dea3f56aa884b520398fb26c20a99dc"
+    },
+    {
+      "path": "public/assets/svg/desk.svg",
+      "bytes": 842,
+      "sha256": "61bac277b0ab15ebee0b90b86b07735bfdc739319113d4e9f1d4252be63cbb72"
+    },
+    {
+      "path": "public/assets/svg/door.svg",
+      "bytes": 687,
+      "sha256": "e6804510b5f45a92cb407e121640c9c7febd9650297be794dd81957eec36ee6c"
+    },
+    {
+      "path": "public/assets/svg/lamp.svg",
+      "bytes": 667,
+      "sha256": "d2bb2d43970db4f20a54c523f114cb6d064d164c49020a08ddc1cade89a49484"
+    },
+    {
+      "path": "public/assets/svg/mug.svg",
+      "bytes": 671,
+      "sha256": "229996027e10aac95241b74cbebef09e2cf422b3fba4a20d0d20f3d4a7861dcf"
+    },
+    {
+      "path": "public/assets/svg/person.svg",
+      "bytes": 2117,
+      "sha256": "0b50bf61d3be16da1b94412363c24eb33a13efa9c643852b1c10ed5db66f336d"
+    },
+    {
+      "path": "public/assets/svg/phone.svg",
+      "bytes": 784,
+      "sha256": "4e1a87ce33d2ad86005e193049d23ee69f1192411ac6346196cc4db85e363a3f"
+    },
+    {
+      "path": "public/assets/svg/plant.svg",
+      "bytes": 1523,
+      "sha256": "28fee1518f398a280c3759254e5957b0b8e0a39bd8ceb0faa5e9b0b7bd0c6aaf"
+    },
+    {
+      "path": "public/assets/svg/robot-shell.svg",
+      "bytes": 2151,
+      "sha256": "dc03af8c38865c9a64fa499ced886c3ea4c48ba98e8fae8c722acd4ec1f20f03"
+    },
+    {
+      "path": "public/assets/svg/room.svg",
+      "bytes": 5236,
+      "sha256": "0e42be73b46a14f2e9ff3aecf0b6fd4ec4e8f2200255b943d68f531a20e338fb"
+    },
+    {
+      "path": "public/assets/vector-assets.json",
+      "bytes": 25624,
+      "sha256": "80f748e6b9807c4839735f8e259ab9bdad23e05e2acfa39ed7b0df0c633fdee4"
+    },
+    {
+      "path": "public/chat.html",
+      "bytes": 8532,
+      "sha256": "1894e994f9c5f243ff76c479ff68e486bd4345f460127a06c7bf334bc9a507d7"
+    },
+    {
+      "path": "public/complete.css",
+      "bytes": 2061,
+      "sha256": "a1738adb0ec5392f25f5bbaecd962812355e98484e939f0b496eef7833c756d9"
+    },
+    {
+      "path": "public/dual.html",
+      "bytes": 786,
+      "sha256": "944af36190ea5756cbcbded32b419be87eddccb064c159f5c9757939dd75b437"
+    },
+    {
+      "path": "public/experience.js",
+      "bytes": 6879,
+      "sha256": "f4e01b3544c9dc78494b946b28788f4b7545e9b2cec409726678913b4a618625"
+    },
+    {
+      "path": "public/gesture.js",
+      "bytes": 4931,
+      "sha256": "5595f90e0a976ddb4b76bbb60798f2cdcf20061549ffc952b6bcb21cee0fb053"
+    },
+    {
+      "path": "public/index.html",
+      "bytes": 6960,
+      "sha256": "55b55f42284fd6f3a6b561e95c22541dfa7725cf553718cc898b85718a3da64b"
+    },
+    {
+      "path": "public/journey.css",
+      "bytes": 2528,
+      "sha256": "7e983e1f93f91b8fc0c7fa30aa8f5ca53e57c16b4fc79219a8fd93a3f1316da0"
+    },
+    {
+      "path": "public/scene.js",
+      "bytes": 4915,
+      "sha256": "0606c85eb7445c48e835fd3d060c0c9236899cc11390d6b2b4140b398401c1b8"
+    },
+    {
+      "path": "public/studio.css",
+      "bytes": 10767,
+      "sha256": "e04b5077c6d90a3504768353404afdc2181686691360153a40b318bc1903ddd9"
+    },
+    {
+      "path": "public/studio.js",
+      "bytes": 10809,
+      "sha256": "d9be6209fc01ae0f6912104728ac389522bf3edce5f4ea307f3b8f0472d8af59"
+    },
+    {
+      "path": "public/style.css",
+      "bytes": 15920,
+      "sha256": "9135d80d0083d7829f11ac7ee05bfa54e0cd075f97d89938f3f8c9e20515c1f4"
+    },
+    {
+      "path": "public/vendor/p5/LICENSE.txt",
+      "bytes": 24480,
+      "sha256": "eb2f25f8f165d5f20682c1ce7e99ce69144ecfd80fbed8c17dfd327ecd8b6cb6"
+    },
+    {
+      "path": "public/vendor/p5/p5.min.js",
+      "bytes": 990638,
+      "sha256": "bb8b82b97fcbcd5bb2d5475d1b6a3904f3ab4ed01b821134fd8f1e7710fce559"
+    },
+    {
+      "path": "server.cjs",
+      "bytes": 22206,
+      "sha256": "09ff3f8d654e70f864e5bce19af017ce539bcf33e35ac3edb508738a81939d2a"
+    },
+    {
+      "path": "test/act2.test.cjs",
+      "bytes": 11391,
+      "sha256": "e9d52d966eb521ab5e6268fa2c5dca45b8c7c23bced8650a811601f7763e724d"
+    },
+    {
+      "path": "test/act3.test.cjs",
+      "bytes": 3555,
+      "sha256": "7bf0dcaf913dc9866e55cc790dbbd8675471fad26a7bbd7bf3063d1f7882c8f7"
+    },
+    {
+      "path": "test/complete-act1.test.cjs",
+      "bytes": 4477,
+      "sha256": "8f6809bd9fe21492354c8e052767dfb343343066fabdf6803a64a00fa95a4b22"
+    },
+    {
+      "path": "test/game.test.cjs",
+      "bytes": 7337,
+      "sha256": "7b07ce9000b411b4943149f5343894e1f8c390c5b3707a3c813bb135fa1f39c4"
+    },
+    {
+      "path": "test/interpreter.test.cjs",
+      "bytes": 2425,
+      "sha256": "806b05764f2cce536b2955b133426d67def9491cefc03106a286ab52dfeda3ec"
+    },
+    {
+      "path": "test/journey.test.cjs",
+      "bytes": 5039,
+      "sha256": "2b1f56c61a59dcca50141dc26075b2c3463d93adbeb5a510b00e2575402afc3b"
+    },
+    {
+      "path": "tools/build-assets.py",
+      "bytes": 8903,
+      "sha256": "c505c68e7c6de7adb80834cebdf19bee71eb9f313018eb55167da400aa429ee3"
+    },
+    {
+      "path": "tools/dev.cjs",
+      "bytes": 722,
+      "sha256": "32800584754df06feb5bec7da22089e9c58fda8027e6a1f22e1de4316acead42"
+    },
+    {
+      "path": "tools/doctor.cjs",
+      "bytes": 739,
+      "sha256": "31cf511106a1586803045f6ed40acdc63960c3cce915072f791ac4e5e40b62fa"
+    },
+    {
+      "path": "tools/start.cjs",
+      "bytes": 1056,
+      "sha256": "081ca715fe54d56c42d4f5e3994cbb3a7583cae6c445c92b1adb10417c710c6a"
+    },
+    {
+      "path": "先读我.md",
+      "bytes": 3001,
+      "sha256": "5e3e0871f0876886939aa495ba8f4ea1b0dd2b8a539a7e320b1caee5e27dd93f"
+    },
+    {
+      "path": "设计说明与运行指南.md",
+      "bytes": 257,
+      "sha256": "0c35069805e9d38c5185c5a27531d7ebd3f818e18bd9663929109c395dd5350a"
+    }
+  ],
+  "baseVerification": {
+    "automatedTestsPassed": 16,
+    "syntaxChecks": "passed",
+    "browserPath": "launcher → Act I → Act II → Act III → mutual ending → read conversation",
+    "browserAct1Mode": "Prepared",
+    "newRealOllamaRun": false,
+    "assetManifestEntriesVerified": 16
+  },
+  "verification": {
+    "scope": "Act II entry and role-exchange partner notices only",
+    "syntaxCheck": "passed",
+    "twoBrowserEntryNotice": "passed",
+    "entryNoticeAfterRefresh": "passed",
+    "twoBrowserExchangeNotice": "passed",
+    "confirmationAndNoticeRemoval": "passed",
+    "layoutInspection": "passed"
+  }
+}
