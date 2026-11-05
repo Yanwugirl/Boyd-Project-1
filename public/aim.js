@@ -1,5 +1,6 @@
 // AIM-style skin for Act I of Between Us.
-// Open as /aim.html?room=ROOMCODE&player=1 (copy ROOMCODE from the launcher's invitation link).
+// With the server.cjs route change, the normal invitation links (/player1.html?room=...) open this page
+// during Act I. It can still be opened directly as /aim.html?room=ROOMCODE&player=1.
 // It speaks the game's own socket protocol: join, state, message:send, typing, ready.
 
 const W = 600, H = 440, LH = 18;
@@ -14,7 +15,10 @@ const CONT = { x: 385, y: 384, w: 62, h: 52 };
 
 const params = new URLSearchParams(location.search);
 const room = (params.get('room') || '').toLowerCase().trim();
-const requestedPlayer = Number(params.get('player')) || undefined;
+// Same rule as the game's own page, so both use the same saved seat
+const requestedPlayer = location.pathname.includes('player2') ? 2
+  : location.pathname.includes('player1') ? 1
+  : Number(params.get('player')) || undefined;
 
 let socket, ta, typingTimer;
 let state = null;        // the latest 'state' message from the server

@@ -1,3 +1,5 @@
+import { useAimTheme, windowFrame, setTitle } from './aim-shell.mjs';
+
 const roleNames = { human: 'Player 1', robot: 'Player 2' };
 
 function element(tag, className, text) {
@@ -11,6 +13,8 @@ export async function mount({ host, state: initial, emit }) {
   const response = await fetch('/acts/act2-layout.json');
   if (!response.ok) throw new Error('The room could not load. Please try again.');
   const layout = await response.json();
+  const aim = initial.role === 'human'; // only Player 1 gets the AIM look
+  useAimTheme(initial.role);
   let state = initial;
   let positions = initial.journey.stage.positions;
   let game = initial.act2;
@@ -47,7 +51,8 @@ export async function mount({ host, state: initial, emit }) {
   notice.setAttribute('role', 'status');
   footer.append(hand, element('p', '', 'Click or drag on the floor to walk. Arrow keys also move. Hold your place when your partner needs you.'), notice);
   panel.append(progress, partnerNotice, content, footer);
-  container.append(board, panel);
+  const dialogWindow = aim ? windowFrame('Away Message', panel, 'aim-dialog') : null;
+  container.append(...(aim ? [windowFrame('Between Us - Shared Room', board, 'aim-room'), dialogWindow] : [board, panel]));
   host.append(container);
 
   function sendTarget(point) {
@@ -150,6 +155,7 @@ export async function mount({ host, state: initial, emit }) {
       return;
     }
     signature = nextSignature;
+    if (aim) setTitle(dialogWindow, { arrival: 'Away Message', gates: state.role === game.guide ? 'Listening' : 'Walking', interlude: 'Trade Places', key: 'Two Halves, One Door', threshold: 'Sign On Together' }[game.step] || 'Between Us');
     renderPartnerNotice();
     const stageIndex = { arrival: 0, gates: game.round + 1, interlude: 2, key: 3, threshold: 3 }[game.step];
     progress.replaceChildren();
@@ -170,7 +176,16 @@ export async function mount({ host, state: initial, emit }) {
       const archive = element('div', 'act2-archive');
       for (const message of state.reveal.slice(-4)) {
         const card = element('article', 'act2-message-card');
-        card.append(element('small', '', `${roleNames[message.from]} wrote`), element('p', 'act2-original', message.original), element('small', '', 'The other person received'), element('p', 'act2-delivered', message.delivered));
+        if (aim) {
+          // AIM-style log lines: your name in blue, theirs in red
+          const mine = message.from === state.role;
+          const [first, second] = mine ? ['You:', 'They saw:'] : ['They wrote:', 'You saw:'];
+          const said = element('p', 'act2-original'); said.append(element('b', mine ? 'aim-name me' : 'aim-name them', first), ` ${message.original}`);
+          const got = element('p', 'act2-delivered'); got.append(element('b', mine ? 'aim-name them' : 'aim-name me', second), ` ${message.delivered}`);
+          card.append(said, got);
+        } else {
+          card.append(element('small', '', `${roleNames[message.from]} wrote`), element('p', 'act2-original', message.original), element('small', '', 'The other person received'), element('p', 'act2-delivered', message.delivered));
+        }
         archive.append(card);
       }
       content.append(archive, button(game.seen[state.role] ? 'Waiting for your partner…' : 'Step into the space', { type: 'arrive' }, game.seen[state.role]));
@@ -271,7 +286,7 @@ export async function mount({ host, state: initial, emit }) {
         observer = new ResizeObserver(() => p.resizeCanvas(Math.max(280, board.clientWidth), Math.max(260, board.clientHeight)));
         observer.observe(board); resolve();
       };
-      p.draw = () => {
+      const drawClassic = () => {
         const w = p.width, h = p.height, time = reduced ? 0 : p.millis() / 1000;
         const round = layout.rounds[game?.round || 0];
         const stage = game?.step || 'arrival';
@@ -329,6 +344,66 @@ export async function mount({ host, state: initial, emit }) {
           p.noStroke(); p.fill(...colour, 200); p.textSize(10); p.textAlign(p.CENTER); p.text(role === state.role ? 'YOU' : roleNames[role], x, y + 34);
         }
         p.noStroke(); p.fill('#a5b99a'); p.textAlign(p.LEFT); p.textSize(10); p.text('A PLACE FOR TWO', w * .085, h * .895);
+      };
+      const drawAim = () => {
+        const w = p.width, h = p.height, time = reduced ? 0 : p.millis() / 1000;
+        const round = layout.rounds[game?.round || 0];
+        const stage = game?.step || 'arrival';
+        const inPuzzle = stage === 'gates' || stage === 'interlude';
+        const gold = [214, 148, 24], blue = [10, 91, 224]; // Player 1 = warm, Player 2 = blue
+        p.textFont('Tahoma, Verdana, sans-serif');
+        p.background('#ece9d8');
+        p.fill('#fbfbf4'); p.stroke('#aca899'); p.strokeWeight(1);
+        p.rect(w * .055, h * .065, w * .89, h * .87, 4);
+        p.stroke(10, 60, 168, 18);
+        for (let column = 1; column < 18; column++) p.line(w * (.055 + column * .0495), h * .065, w * (.055 + column * .0495), h * .935);
+        for (let row = 1; row < 12; row++) p.line(w * .055, h * (.065 + row * .0725), w * .945, h * (.065 + row * .0725));
+        if (inPuzzle) {
+          p.noStroke(); p.fill('#c9d3e8'); p.rect(w * .48, h * .09, w * .04, h * .82, 4);
+          for (const mark of layout.doors) {
+            const open = game?.passage === mark.id;
+            p.fill(open ? '#d7f0d0' : '#f4f2e8');
+            p.stroke(open ? '#2f9e44' : '#7f9db9'); p.strokeWeight(open ? 2 : 1);
+            p.rect(w * .462, h * (mark.y - layout.doorHalfHeight), w * .076, h * layout.doorHalfHeight * 2, 4);
+            glyph(mark.id, w * .5, h * mark.y, Math.min(w, h) * .018, open ? '#2f9e44' : '#0a3ca8');
+          }
+          ring(round.pad, blue, game?.guide === state.role ? 'STAND HERE TO LISTEN' : 'YOUR PARTNER HOLDS THIS', game?.listening);
+          ring(round.goal, game?.operator === 'human' ? gold : blue, 'KEY FRAGMENT', false, 22);
+          p.noStroke(); p.fill('#0a3ca8'); p.textSize(29); p.textAlign(p.CENTER); p.text(game?.round === 0 ? '◐' : '◑', round.goal.x * w, round.goal.y * h + 10);
+          if (game?.clue) glyph(game.clue, round.pad.x * w, round.pad.y * h - 5, 11, '#0a3ca8');
+        } else if (stage === 'key' || stage === 'threshold') {
+          ring(layout.keySlots.human, gold, 'PLAYER 1', true, 28);
+          ring(layout.keySlots.robot, blue, 'PLAYER 2', true, 28);
+          p.noFill(); p.stroke('#0a5be0'); p.strokeWeight(2);
+          p.arc(w * .5, h * .16, w * .24, h * .22, p.PI, p.TWO_PI);
+          p.line(w * .38, h * .16, w * .38, h * .33); p.line(w * .62, h * .16, w * .62, h * .33);
+          if (stage === 'threshold') { p.noStroke(); p.fill('#2f9e44'); p.circle(w * .5, h * .2, 19 + Math.sin(time) * 2); }
+        } else {
+          p.noStroke(); p.fill(10, 60, 168, 200); p.textFont('Georgia'); p.textAlign(p.CENTER); p.textSize(Math.min(30, w * .041));
+          p.text('Another person was here all along.', w * .5, h * .28);
+        }
+        for (const role of ['human', 'robot']) {
+          avatarPoints[role].x = p.lerp(avatarPoints[role].x, positions[role].x, .28);
+          avatarPoints[role].y = p.lerp(avatarPoints[role].y, positions[role].y, .28);
+        }
+        const a = avatarPoints.human, b = avatarPoints.robot;
+        p.noFill(); p.stroke(10, 60, 168, 45); p.strokeWeight(1);
+        p.bezier(a.x * w, a.y * h, w * .42, (a.y + b.y) * h * .42, w * .58, (a.y + b.y) * h * .42, b.x * w, b.y * h);
+        for (const role of ['human', 'robot']) {
+          const point = avatarPoints[role], x = point.x * w, y = point.y * h;
+          // Both people are buddy-icon smileys now: yellow for Player 1, sky blue for Player 2
+          p.noStroke(); p.fill(0, 0, 0, 22); p.ellipse(x, y + 21, 34, 10);
+          p.fill(role === 'human' ? '#ffd23f' : '#7bb8f5'); p.stroke('#6b5a18'); p.strokeWeight(1.2);
+          p.circle(x, y, 34 + Math.sin(time * 1.4) * 1.5);
+          p.noStroke(); p.fill('#1d2b3a'); p.circle(x - 6, y - 4, 4); p.circle(x + 6, y - 4, 4);
+          p.noFill(); p.stroke('#1d2b3a'); p.strokeWeight(1.6); p.arc(x, y + 2, 16, 11, 0, p.PI);
+          if (game?.collected[role]) { p.noStroke(); p.fill(role === 'human' ? gold : blue); p.circle(x + 16, y - 15, 8); }
+          p.noStroke(); p.fill(29, 43, 58, 220); p.textSize(10); p.textAlign(p.CENTER); p.text(role === state.role ? 'YOU' : roleNames[role], x, y + 36);
+        }
+        p.noStroke(); p.fill('#8a8f9a'); p.textAlign(p.LEFT); p.textSize(10); p.text('A PLACE FOR TWO', w * .085, h * .895);
+      };
+      p.draw = () => {
+        if (aim) drawAim(); else drawClassic();
         if (performance.now() - lastKeyboardTick > 90 && keys.size) {
           lastKeyboardTick = performance.now();
           const point = positions[state.role];

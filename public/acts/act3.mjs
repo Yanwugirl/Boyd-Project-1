@@ -1,3 +1,5 @@
+import { useAimTheme, windowFrame, setTitle } from './aim-shell.mjs';
+
 function node(tag, className, text) {
   const result = document.createElement(tag);
   if (className) result.className = className;
@@ -19,6 +21,8 @@ const picture = `<svg viewBox="0 0 320 300" role="img" aria-label="Two people, a
 </svg>`;
 
 export async function mount({ host, state: initial, emit }) {
+  const aim = initial.role === 'human'; // only Player 1 gets the AIM look
+  useAimTheme(initial.role);
   let state = initial, act = initial.act3;
   let serverBase = initial.serverTime || Date.now(), localBase = performance.now();
   let actionPending = false, sending = false, destroyed = false, reading = false;
@@ -76,7 +80,9 @@ export async function mount({ host, state: initial, emit }) {
   const read = node('button', 'a3-primary', 'Read our conversation'); read.type = 'button'; read.dataset.gesture = '';
   const leave = node('a', 'a3-return', 'Return to the beginning'); leave.href = '/';
   endingActions.append(read, leave); ending.append(finalWords, endingActions);
-  main.append(intro, chat, ending); root.append(garden, main); host.append(root);
+  main.append(intro, chat, ending);
+  const mainWindow = aim ? windowFrame('You : The other person - Instant Message', main, 'aim-main') : null;
+  root.append(aim ? windowFrame('Buddy Info', garden, 'aim-side') : garden, aim ? mainWindow : main); host.append(root);
 
   try {
     const saved = JSON.parse(sessionStorage.getItem(draftKey));
@@ -202,6 +208,7 @@ export async function mount({ host, state: initial, emit }) {
     const complete = act.step === 'complete';
     root.classList.toggle('is-open', !sealed);
     root.classList.toggle('is-complete', complete);
+    if (aim) setTitle(mainWindow, sealed ? 'Shared Key - File Transfer' : complete ? 'You : The other person - Signed Off' : 'You : The other person - Instant Message');
     intro.hidden = !sealed; chat.hidden = sealed || (complete && !reading); ending.hidden = !complete || reading;
     form.hidden = complete;
     gardenTitle.textContent = sealed ? 'A little space\nto be heard.' : complete ? 'The words\nwere yours.' : 'Two people.\nTheir own words.';
