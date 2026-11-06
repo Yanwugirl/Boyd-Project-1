@@ -73,11 +73,11 @@ function createGame(options = {}) {
       messages: room.messages.map(m => ({ ...m, player: m.from === 'human' ? 1 : 2 })) });
   });
   app.get(['/player1.html', '/player2.html', '/play.html'], (req, res) => {
-  const room = rooms.get(String(req.query.room || '').toLowerCase());
-  const act1 = !room || room.phase === 'act1';
-  const aim = act1 && req.path === '/player1.html'; // Player 1 only, and only during Act I
-  res.sendFile(path.join(__dirname, 'public', aim ? 'aim.html' : 'chat.html'));
-  });
+     const room = rooms.get(String(req.query.room || '').toLowerCase());
+     const act1 = !room || room.phase === 'act1';
+     const aim = act1 && req.path === '/player1.html'; // Player 1 only, and only during Act I
+     res.sendFile(path.join(__dirname, 'public', aim ? 'aim.html' : 'chat.html'));
+   });
   app.use('/vendor/p5', express.static(path.join(__dirname, 'public/vendor/p5')));
   app.use(express.static(path.join(__dirname, 'public')));
 
