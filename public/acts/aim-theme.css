@@ -90,3 +90,5 @@ body.scene-mode .a3-input-meta,body.scene-mode .a3-send-status{font:10px Tahoma,
 body.scene-mode .a3-new-messages{font:11px Tahoma,sans-serif;background:#ffffe1;border:1px solid #000;border-radius:0;color:#000}
 body.scene-mode .a3-final-words blockquote{background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0;color:#000}
 body.scene-mode .a3-return{color:#0000e0}
+
+body.scene-mode .a3-translation{display:block;margin:0 0 4px;font:italic 12px Tahoma,sans-serif;color:#555;opacity:1}

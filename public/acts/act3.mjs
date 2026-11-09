@@ -184,6 +184,7 @@ export async function mount({ host, state: initial, emit }) {
       const time = new Date(message.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
       heading.append(node('span', '', mine ? 'You' : 'The other person'), node('time', '', time));
       row.append(heading, node('p', 'a3-bubble', message.text));
+      if (message.translation) row.append(node('p', 'a3-translation', `English: ${message.translation}`));
       if (mine) row.append(node('small', 'a3-sent', 'Sent ✓'));
       log.append(row);
     }

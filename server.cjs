@@ -7,6 +7,7 @@ const os = require('node:os');
 const express = require('express');
 const { Server } = require('socket.io');
 const { createInterpreter } = require('./lib/interpreter.cjs');
+const { toEnglish } = require('./lib/translate.cjs');
 const { acts, createJourney, beginTransition, sceneLoaded } = require('./lib/journey.cjs');
 const { createAct2, gameView, setTarget, act2Action, stepAct2, pauseAct2, createHandoff } = require('./lib/act2.cjs');
 const { createAct3, act3View, act3Action, sendAct3, pauseAct3 } = require('./lib/act3.cjs');
@@ -88,7 +89,7 @@ function createGame(options = {}) {
       room: room.id, role: player.role, phase: room.phase, journey: room.journey, serverTime: clock(), busy: room.busy,
       act2: gameView(room.act2, player.role),
       act3: act3View(room.act3, player.role),
-      reveal: revealed ? room.messages.map(message => ({ id: message.id, from: message.from, original: message.x, delivered: message.y })) : [],
+      reveal: revealed ? room.messages.map(message => ({ id: message.id, from: message.from, original: message.from === player.role ? message.x : (message.xEn || message.x), delivered: message.y })) : [],
       mode: engineOf(room).mode, model: engineOf(room).mode === 'ollama' ? engineOf(room).model : null, player: player.role === 'human' ? 1 : 2, pending: room.pending ? { from: room.pending.from } : null, paired: room.players.every(isPresent),
       players: room.players.map(p => p ? ({ role: p.role, connected: isPresent(p), ready: p.ready, sent: p.sent }) : null),
       // The reveal above is authorized only after both clients enter Act II.
@@ -215,10 +216,11 @@ function createGame(options = {}) {
       const inferenceStart = clock();
       try {
         // x = the real player's input. y = an interpretation of x, not an invented partner reply.
-        const { y, tone, engine } = await engineOf(room).interpret(x, phraseId);
+        const xEn = await toEnglish(x); // English version when x is Chinese, otherwise null
+      const { y, tone, engine } = await engineOf(room).interpret(xEn || x, phraseId);
         if (typeof y !== 'string' || !y.trim() || y.length > 480) throw new Error('The interpretation was not readable.');
         if (rooms.get(room.id) !== room) throw new Error('This room has closed.');
-        room.messages.push({ id: crypto.randomUUID(), from: player.role, x, y: y.trim(), tone, engine, at: clock(), durationMs: clock() - inferenceStart });
+        room.messages.push({ id: crypto.randomUUID(), from: player.role, x, xEn, y: y.trim(), tone, engine, at: clock(), durationMs: clock() - inferenceStart });
         player.sent += 1; player.ready = false;
         for (const p of room.players) if (p) p.ready = false;
         ack({ ok: true });
@@ -300,6 +302,9 @@ function createGame(options = {}) {
       if (!result.ok) return;
       c.room.touched = clock();
       socket.to(c.room.id).emit('stage:state', { act: 'act3', typing: { role: c.player.role, active: false } });
+    // The words stay exactly as written; an English version is added beside them for the other person.
+    const sent = c.room.act3.messages.find(m => m.id === result.id);
+    toEnglish(sent && sent.text).then(en => { if (en && rooms.get(c.room.id) === c.room) { sent.translation = en; publish(c.room); } });
       publish(c.room);
     });
     socket.on('act3:typing', active => {

@@ -1,0 +1,92 @@
+/* XP / AIM look for Acts II and III. Everything is scoped to body.scene-mode so Act I is untouched. */
+body{--tb1:#4a9bff;--tb2:#0a5be0;--tb3:#0640b8;--blue:#0a3ca8;--xp-bg:#ece9d8}
+
+/* Desktop */
+body.scene-mode .scene-view{background:radial-gradient(120% 65% at 25% 108%,#4c9b2f 0 46%,transparent 47%),radial-gradient(110% 55% at 95% 112%,#3d8a28 0 42%,transparent 43%),linear-gradient(#2d6fd8,#6fb0f2 60%,#b4d8f8);color:#000;font-family:Tahoma,Verdana,sans-serif}
+body.scene-mode .stage-header{display:none}
+
+/* Taskbar (replaces the old header and bottom line) */
+body.scene-mode .stage-bottom{left:0;right:0;bottom:0;height:40px;gap:8px;justify-content:flex-start;pointer-events:auto;z-index:3;font:12px Tahoma,Verdana,sans-serif;color:#fff;background:linear-gradient(#3168d5,#4993e6 6%,#2a5fcf 14%,#245edb 86%,#1941a5);border-top:1px solid #0c2f8a}
+.aim-start{align-self:stretch;display:flex;align-items:center;padding:0 24px 0 14px;font:italic bold 19px Tahoma,sans-serif;color:#fff;background:linear-gradient(#5bb05a,#3c9a3b 15%,#2d8a2d 80%,#256f25);border-radius:0 12px 12px 0;box-shadow:inset -1px 0 #1b5f1b;text-shadow:1px 1px 1px #0b3d0b}
+body.scene-mode #stage-act{background:#1e52b7;border:1px solid #0c2f8a;border-radius:3px;padding:5px 12px;letter-spacing:0;color:#fff;box-shadow:inset 0 0 0 1px #5d8ee8;white-space:nowrap}
+body.scene-mode #stage-hint{flex:1;min-width:0;color:#dfe9ff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aim-tray{display:flex;align-items:center;gap:12px;align-self:stretch;margin-left:auto;padding:0 14px;background:linear-gradient(#0f9bef,#1590e8);border-left:1px solid #0c2f8a;box-shadow:inset 1px 0 #5bb5ff;pointer-events:auto}
+.aim-tray .stage-connection{font-size:11px;color:#fff}.aim-tray .stage-connection::before{background:#7bff7b}.aim-tray .stage-connection.paused::before{background:#ffd23f}
+.aim-tray #stage-leave{font:11px Tahoma,sans-serif;color:#000;background:linear-gradient(#fff,#ece9d8 85%,#d6d0c0);border:1px solid #003c74;border-radius:3px;padding:3px 9px;cursor:pointer}
+.aim-clock{font-size:12px;color:#fff}
+
+/* Windows */
+.aim-window{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--xp-bg);border:1px solid #0831a0;border-radius:8px 8px 0 0;box-shadow:0 8px 22px #00000060;overflow:hidden;font-family:Tahoma,Verdana,sans-serif;color:#000}
+.aim-titlebar{display:flex;align-items:center;gap:7px;height:30px;padding:0 5px 0 8px;flex-shrink:0;background:linear-gradient(var(--tb1),var(--tb2) 15%,var(--tb2) 82%,var(--tb3));color:#fff;font:bold 13px Tahoma,sans-serif;text-shadow:1px 1px #0a1f66}
+.aim-icon{width:16px;height:16px;border-radius:4px;background:#ffd23f;flex-shrink:0}
+.aim-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aim-controls{display:flex;gap:2px}.aim-controls b{width:22px;height:22px;display:grid;place-items:center;border:1.5px solid #fff;border-radius:4px;background:#2f6fe8;font-size:13px;line-height:1;text-shadow:none}.aim-controls .x{background:#d9471f}
+.aim-window-body{flex:1;min-height:0;display:flex;flex-direction:column}.aim-window-body>*{flex:1;min-height:0}
+
+/* XP buttons */
+body.scene-mode .act2-action,body.scene-mode .act2-partner-confirm,body.scene-mode .a3-primary,body.scene-mode .a3-secondary,body.scene-mode .a3-finish,body.scene-mode .a3-send,body.scene-mode .act2-hand,body.scene-mode .a3-hand{font:12px Tahoma,sans-serif;color:#000;background:linear-gradient(#fff,#ece9d8 85%,#d6d0c0);border:1px solid #003c74;border-radius:3px;padding:6px 14px;box-shadow:none;cursor:pointer}
+body.scene-mode .act2-action:hover,body.scene-mode .act2-partner-confirm:hover,body.scene-mode .a3-primary:hover,body.scene-mode .a3-secondary:hover,body.scene-mode .a3-finish:hover,body.scene-mode .a3-send:hover,body.scene-mode .act2-action.gesture-hover,body.scene-mode .a3-primary.gesture-hover{background:linear-gradient(#fff,#ece9d8 85%,#d6d0c0);box-shadow:inset 0 0 0 2px #f8b330}
+body.scene-mode button:disabled{color:#a0a0a0;border-color:#aca899;box-shadow:none;cursor:default;opacity:1}
+
+/* Act II */
+body.scene-mode .act2-layout{inset:24px 28px 56px;gap:18px;color:#000;font-family:Tahoma,Verdana,sans-serif}
+.aim-window .act2-board{border-radius:0;min-height:0}
+.aim-window .act2-panel{background:var(--xp-bg);border:0;border-radius:0;box-shadow:none;color:#000}
+body.scene-mode .act2-progress{background:#f4f2e8;border-bottom:1px solid #aca899;padding:8px 14px}
+body.scene-mode .act2-progress span{font:11px Tahoma,sans-serif;letter-spacing:0;color:#808080}body.scene-mode .act2-progress span.active{color:var(--blue)}
+body.scene-mode .act2-partner-notice{background:#ffffe1;color:#000;border-bottom:1px solid #000}
+body.scene-mode .act2-partner-copy h2{font:bold 13px Tahoma,sans-serif;color:#000}body.scene-mode .act2-partner-copy p{color:#333;font-size:11px}
+body.scene-mode .act2-partner-mark{border-color:#000;color:#000}
+body.scene-mode .act2-panel-content{padding:14px 16px}
+body.scene-mode .act2-kicker{font:10px Tahoma,sans-serif;letter-spacing:0;color:#808080}
+body.scene-mode .act2-panel h1{font:bold 18px Tahoma,sans-serif;letter-spacing:0;color:var(--blue)}
+body.scene-mode .act2-description,body.scene-mode .act2-small,body.scene-mode .act2-request,body.scene-mode .act2-controls p{font:11px/1.6 Tahoma,sans-serif;color:#333}
+body.scene-mode .act2-clue{border:1px dashed #7f9db9;background:#fff;color:#333}body.scene-mode .act2-clue-symbol{color:var(--blue)}
+body.scene-mode .act2-signal-message{background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0}
+body.scene-mode .act2-signal-message strong{font:bold 20px Tahoma,sans-serif;color:var(--blue)}body.scene-mode .act2-signal-message small,body.scene-mode .act2-signal-message p{color:#555}
+body.scene-mode .act2-signals button{font-size:24px;background:linear-gradient(#fff,#ece9d8);color:var(--blue)}
+body.scene-mode .act2-controls{background:var(--xp-bg);border-top:1px solid #aca899}
+body.scene-mode .act2-paused{background:#ffffe1;border:1px solid #000;border-radius:0;color:#000}
+body.scene-mode .act2-fragments{font-family:Tahoma,sans-serif;color:var(--blue)}
+body.scene-mode .act2-key-meter{height:16px;border-radius:0;background:#fff;border:1px solid #808080}body.scene-mode .act2-key-fill{background:repeating-linear-gradient(90deg,#2f9e44 0 8px,#fff 8px 10px)}
+/* The reveal reads like an away-message log */
+body.scene-mode .act2-archive{background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;padding:8px 10px;gap:8px;max-height:260px}
+body.scene-mode .act2-message-card{padding:0;border:0;border-radius:0;background:none}
+body.scene-mode .act2-message-card p{font:15px/1.5 Arial,sans-serif;margin:0;color:#000}
+.aim-name{font:bold 15px 'Times New Roman',serif}.aim-name.me{color:#0000e0}.aim-name.them{color:#d00000}
+
+/* Act III */
+body.scene-mode .act3-space,body.scene-mode .act3-space.is-open{inset:24px 5% 56px;gap:18px;grid-template-columns:30% minmax(0,1fr);background:none;border:0;border-radius:0;box-shadow:none;color:#000;font-family:Tahoma,Verdana,sans-serif}
+body.scene-mode .a3-garden,body.scene-mode .is-open .a3-garden{background:#fff;color:#000;border:0;padding:14px;justify-content:flex-start}
+body.scene-mode .a3-garden h2,body.scene-mode .is-open .a3-garden h2{font:bold 15px Tahoma,sans-serif;letter-spacing:0;color:var(--blue)}
+body.scene-mode .a3-eyebrow,body.scene-mode .is-open .a3-garden .a3-eyebrow{font:10px Tahoma,sans-serif;letter-spacing:0;color:#808080}
+body.scene-mode .a3-garden-copy,body.scene-mode .is-open .a3-garden-copy{font:11px/1.6 Tahoma,sans-serif;color:#333}
+body.scene-mode .a3-person,body.scene-mode .is-open .a3-person{stroke:var(--blue)}body.scene-mode .a3-person-two,body.scene-mode .is-open .a3-person-two{stroke:#d94b1e}
+body.scene-mode .a3-arch,body.scene-mode .a3-floor,body.scene-mode .is-open .a3-arch,body.scene-mode .is-open .a3-floor{stroke:#7f9db9}
+body.scene-mode .a3-shell{fill:#c9d3e8;stroke:#7f9db9}body.scene-mode .a3-thread,body.scene-mode .is-open .a3-thread{stroke:#2f9e44}
+body.scene-mode .a3-intro{margin:0;max-width:none;padding:18px;color:#000}
+body.scene-mode .a3-intro h1,body.scene-mode .a3-ending h1{font:bold 20px Tahoma,sans-serif;letter-spacing:0;color:var(--blue);margin:10px 0 14px}
+body.scene-mode .a3-intro-copy,body.scene-mode .a3-ending-description{font:12px/1.6 Tahoma,sans-serif;color:#333;max-width:none}
+body.scene-mode .a3-invitation{background:#ffffe1;border:1px solid #000;border-radius:0;color:#000;font:12px/1.5 Tahoma,sans-serif}
+body.scene-mode .a3-intro-status{color:#a00}
+body.scene-mode .a3-primary,body.scene-mode .a3-secondary{max-width:260px;width:auto;margin-right:8px;display:inline-block}
+body.scene-mode .a3-chat-header{padding:6px 10px;background:#f4f2e8;border-bottom:1px solid #aca899}
+body.scene-mode .a3-chat-header .a3-eyebrow,body.scene-mode .a3-chat-header p{display:none}
+body.scene-mode .a3-chat-header h1{font:bold 12px Tahoma,sans-serif;letter-spacing:0;margin:0;color:var(--blue)}
+body.scene-mode .a3-connection,body.scene-mode .a3-end-notice{background:#ffffe1;border:0;border-bottom:1px solid #000;color:#000;padding:8px 12px;font:11px/1.5 Tahoma,sans-serif}
+body.scene-mode .a3-end-notice h2{font:bold 12px Tahoma,sans-serif;color:#000;margin:0 0 3px}body.scene-mode .a3-end-notice p{color:#333;max-width:none;margin:0}
+body.scene-mode .a3-messages{background:#fff;margin:8px 10px 0;padding:8px 10px;border:2px solid;border-color:#808080 #fff #fff #808080}
+body.scene-mode .a3-empty,body.scene-mode .a3-empty>span,body.scene-mode .a3-empty h2,body.scene-mode .a3-empty p{color:#808080;font-family:Tahoma,sans-serif}
+body.scene-mode .a3-message,body.scene-mode .a3-message.mine{display:block;margin:0 0 3px}
+body.scene-mode .a3-message-meta{display:inline;margin:0;font:bold 15px 'Times New Roman',serif}
+body.scene-mode .a3-message-meta span::after{content:': '}body.scene-mode .a3-message-meta time,body.scene-mode .a3-sent{display:none}
+body.scene-mode .a3-message.mine .a3-message-meta{color:#0000e0}body.scene-mode .a3-message.theirs .a3-message-meta{color:#d00000}
+body.scene-mode .a3-bubble,body.scene-mode .a3-message.mine .a3-bubble{display:inline;font:15px/1.5 Arial,sans-serif;color:#000;background:none;border:0;border-radius:0;padding:0;max-width:none}
+body.scene-mode .a3-typing{font:italic 11px Tahoma,sans-serif;color:#808080;margin:2px 12px 0}
+body.scene-mode .a3-compose{padding:0 10px 10px}
+body.scene-mode .a3-input-row{background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0;padding:4px 6px}
+body.scene-mode .a3-input-row textarea{font:15px Arial,sans-serif;color:#000}
+body.scene-mode .a3-input-meta,body.scene-mode .a3-send-status{font:10px Tahoma,sans-serif;color:#555}
+body.scene-mode .a3-new-messages{font:11px Tahoma,sans-serif;background:#ffffe1;border:1px solid #000;border-radius:0;color:#000}
+body.scene-mode .a3-final-words blockquote{background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0;color:#000}
+body.scene-mode .a3-return{color:#0000e0}
