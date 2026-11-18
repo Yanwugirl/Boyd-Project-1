@@ -4,56 +4,10 @@ const assert = require('node:assert/strict');
 const { once } = require('node:events');
 const { io } = require('socket.io-client');
 const { createGame } = require('../server.cjs');
-const { createAct2, act2Action, gameView, setTarget, stepAct2, layout } = require('../lib/act2.cjs');
+const { layout } = require('../lib/act2.cjs');
 const emit = (client, event, data) => new Promise((resolve, reject) => client.timeout(5000).emit(event, data, (error, result) => error ? reject(error) : resolve(result)));
 
-function advance(game, milliseconds) {
-  for (let time = 0; time < milliseconds; time += 50) stepAct2(game, 50);
-}
-
-test('Act II hides the clue, validates original-signal consent, and blocks fast movement and closed passages', () => {
-  const game = createAct2(structuredClone(layout.spawns));
-  act2Action(game, 'human', { type: 'arrive' });
-  assert.equal(game.step, 'arrival');
-  act2Action(game, 'robot', { type: 'arrive' });
-  const mark = layout.doors[game.secret[0]].id;
-  assert.equal(gameView(game, 'human').clue, null);
-  assert.equal(gameView(game, 'robot').clue, null);
-  assert.ok(act2Action(game, 'robot', { type: 'signal', symbol: mark }));
-  setTarget(game, 'robot', layout.rounds[0].pad); advance(game, 1500);
-  assert.equal(gameView(game, 'robot').clue, mark);
-  assert.equal(gameView(game, 'human').clue, null);
-  const wrongMark = layout.doors.find(door => door.id !== mark).id;
-  act2Action(game, 'robot', { type: 'signal', symbol: wrongMark });
-  act2Action(game, 'human', { type: 'request-original' });
-  act2Action(game, 'robot', { type: 'share-original' });
-  assert.equal(gameView(game, 'human').passage, null, 'A shared but incorrect original must not appear as an open passage');
-  assert.ok(act2Action(game, 'human', { type: 'signal', symbol: mark }));
-  assert.equal(act2Action(game, 'robot', { type: 'signal', symbol: mark }), null);
-  assert.notEqual(game.signal.delivered, mark);
-  assert.equal(gameView(game, 'human').signal.original, null);
-  assert.ok(act2Action(game, 'robot', { type: 'share-original' }));
-  const y = layout.doors[game.secret[0]].y;
-  setTarget(game, 'human', { x: .4, y }); advance(game, 2500);
-  setTarget(game, 'human', { x: .8, y }); advance(game, 2500);
-  assert.ok(game.positions.human.x < .5);
-  assert.equal(act2Action(game, 'human', { type: 'request-original' }), null);
-  setTarget(game, 'robot', { x: .9, y: .8 }); advance(game, 2000);
-  assert.equal(act2Action(game, 'robot', { type: 'share-original' }), null);
-  assert.equal(gameView(game, 'human').signal.original, mark);
-  advance(game, 2000);
-  assert.ok(game.positions.human.x < .5, 'Leaving the circle closes the passage');
-  setTarget(game, 'robot', layout.rounds[0].pad); advance(game, 2000);
-  assert.ok(game.positions.human.x > .5);
-  const before = { ...game.positions.human };
-  setTarget(game, 'human', { x: -100, y: 100 });
-  stepAct2(game, 100000);
-  assert.ok(Math.hypot(game.positions.human.x - before.x, game.positions.human.y - before.y) <= layout.speed * .1 + 1e-8);
-  setTarget(game, 'human', { x: NaN, y: 1 });
-  assert.ok(Number.isFinite(game.targets.human.x));
-});
-
-test('two real clients complete all three acts with exact final words, reconnect, and mutual closure', async t => {
+test('two real clients complete all three acts with the Filter Room, exact final words, reconnect, and mutual closure', async t => {
   let now = Date.now();
   let modelCalls = 0;
   const interpreter = { mode: 'ollama', model: 'counting-fixture', async interpret(text) { modelCalls++; return { y: 'Interpreted: ' + text, tone: 'quiet', engine: 'test-adapter' }; }, async status() { return { ready: true, mode: 'ollama' }; } };
@@ -84,47 +38,49 @@ test('two real clients complete all three acts with exact final words, reconnect
   await emit(human, 'act2:action', { type: 'arrive' });
   assert.equal(active.act2.step, 'arrival');
   await emit(robot, 'act2:action', { type: 'arrive' });
-  assert.equal(active.act2.step, 'gates');
-  async function walk(client, target, duration = 2600) {
+  assert.equal(active.act2.step, 'round');
+  assert.equal(active.act2.rounds.length, 3, 'Rounds are built from this room’s real Act I messages');
+  assert.equal(active.act2.rounds[0].messageId, active.messages.find(m => m.id === active.act2.rounds[0].messageId)?.id);
+
+  const clientOf = role => (role === 'human' ? human : robot);
+  async function point(client, target) {
     now += 100; client.emit('scene:move', target);
-    await emit(client, 'scene:loaded', loaded);
+    await emit(client, 'scene:loaded', loaded); // an ordering barrier: the move has arrived
+  }
+  function tick(duration) {
     for (let passed = 0; passed < duration; passed += 50) { now += 50; game.advanceScenes(); }
   }
-  async function solveRound(index) {
-    const round = layout.rounds[index];
-    const guide = round.guide === 'human' ? human : robot;
-    const operator = round.operator === 'human' ? human : robot;
-    await walk(guide, round.pad);
-    const clue = layout.doors[active.act2.secret[index]];
-    assert.equal((await emit(guide, 'act2:action', { type: 'signal', symbol: clue.id })).ok, true);
-    assert.equal((await emit(operator, 'act2:action', { type: 'request-original' })).ok, true);
-    assert.equal((await emit(guide, 'act2:action', { type: 'share-original' })).ok, true);
-    const near = index === 0 ? .4 : .6, far = index === 0 ? .65 : .35;
-    await walk(operator, { x: near, y: clue.y });
-    await walk(operator, { x: far, y: clue.y });
-    await walk(operator, round.goal);
+  async function solveRound() {
+    const round = active.act2.rounds[active.act2.round];
+    const writer = clientOf(round.writer), reader = clientOf(round.reader);
+    const truth = layout.terminals[round.trueIndex];
+    await point(writer, { x: .5, y: .9 }); await point(reader, { x: .5, y: .88 }); tick(100);
+    await point(writer, truth); tick(2600);
+    assert.equal(active.act2.pinned, round.trueIndex);
+    await point(reader, truth); tick(1500);
+    assert.equal(active.act2.step, 'restored');
   }
-  await solveRound(0);
-  assert.equal(active.act2.step, 'interlude');
-  assert.equal(active.act2.collected.human, true);
+  await solveRound();
+  assert.equal(active.act2.restored.length, 1);
   const pause = once(human, 'state'); robot.disconnect(); await pause;
-  const pausedPosition = structuredClone(active.journey.stage.positions);
   now += 2000; game.advanceScenes();
-  assert.deepEqual(active.journey.stage.positions, pausedPosition);
   robot = await join(2);
-  assert.equal(active.act2.step, 'interlude');
+  assert.equal(active.act2.step, 'restored');
   assert.equal(active.messages.length, 4);
   await emit(human, 'act2:action', { type: 'next' });
   assert.equal(active.act2.round, 0);
   await emit(robot, 'act2:action', { type: 'next' });
   assert.equal(active.act2.round, 1);
   assert.equal((await emit(human, 'act2:action', { type: 'continue', value: true })).ok, false);
-  await solveRound(1);
-  assert.equal(active.act2.step, 'key');
-  assert.deepEqual(active.act2.collected, { human: true, robot: true });
-  await walk(human, layout.keySlots.human);
-  assert.equal(active.act2.step, 'key');
-  await walk(robot, layout.keySlots.robot, 4500);
+  await solveRound();
+  await emit(human, 'act2:action', { type: 'next' }); await emit(robot, 'act2:action', { type: 'next' });
+  await solveRound();
+  await emit(human, 'act2:action', { type: 'next' }); await emit(robot, 'act2:action', { type: 'next' });
+  assert.equal(active.act2.step, 'join');
+  const ring = { x: layout.joinRing.x, y: layout.joinRing.y };
+  await point(human, ring); tick(2000);
+  assert.equal(active.act2.step, 'join');
+  await point(robot, ring); tick(2000);
   assert.equal(active.act2.step, 'threshold');
   const revealState = once(human, 'state');
   await emit(human, 'act2:action', { type: 'continue', value: true });
@@ -138,7 +94,8 @@ test('two real clients complete all three acts with exact final words, reconnect
   assert.equal(active.phase, 'act2-ended');
   assert.equal(active.journey.handoff.key, 'joined');
   assert.equal(active.journey.handoff.shell, 'closed');
-  assert.equal(active.journey.handoff.recoveredMessageIds.length, 4);
+  assert.equal(active.journey.handoff.recoveredMessageIds.length, 3);
+
   const finalData = { act: 'act3', transitionId: active.journey.transition.id };
   await emit(human, 'scene:loaded', finalData); assert.equal(active.phase, 'act2-ended');
   await emit(robot, 'scene:loaded', finalData);
@@ -156,7 +113,7 @@ test('two real clients complete all three acts with exact final words, reconnect
   await emit(human, 'act3:action', { type: 'offer-key', value: true });
   await emit(robot, 'act3:action', { type: 'accept-key' });
   now += 2000;
-  const exactText = '  这是我真正想说的。\nThese words arrive unchanged. 🌱  ';
+  const exactText = ' 这是我真正想说的。\nThese words arrive unchanged. 🌱 ';
   const outbound = { clientId: 'final-human-message-123456', text: exactText };
   const twoMessages = await Promise.all([
     emit(human, 'act3:send', outbound),

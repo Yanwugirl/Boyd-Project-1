@@ -84,7 +84,8 @@
     $('waiting-title').textContent = next.messages.length ? 'Connection paused.' : `Waiting for Player ${p === 1 ? 2 : 1}…`;
     $('waiting-description').textContent = next.messages.length ? 'Your partner can return to the same invitation.' : 'Share the other invitation from the room launcher to begin.';
     $('cancel-search').textContent = 'Return to start';
-    if (next.phase === 'act1-ended') GestureInput.stop();
+    // Stop the Act I camera once. Later updates must not stop the camera the next act has started.
+    if (next.phase === 'act1-ended' && !window.act1HandStopped) { window.act1HandStopped = true; GestureInput.stop(); }
     if (!next.paired || next.phase !== 'act1') $('typing').hidden = true;
     $('preview-notice').hidden = modelReady;
     $('preview-notice-text').textContent = 'Getting the connection ready. Please ask the host if this takes a while.';

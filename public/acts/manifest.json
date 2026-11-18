@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "acts": [
     {
       "id": "act1",
@@ -16,7 +16,7 @@
       "next": "act3",
       "module": "/acts/act2.mjs",
       "enabled": true,
-      "hint": "Move on the floor · cooperate through the signal panel"
+      "hint": "Your hand is your light · find what they meant"
     },
     {
       "id": "act3",

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hand test</title>
+<style>
+  :root { --bg:#1d2b26; --panel:#26382f; --ink:#e7ecd9; --muted:#a9b79c; --ok:#8fd17a; --bad:#ff8a7a; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 Arial, sans-serif; }
+  main { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:20px; padding:20px; }
+  .stage { position:relative; background:#000; border-radius:10px; overflow:hidden; aspect-ratio:4/3; }
+  video, canvas { position:absolute; inset:0; width:100%; height:100%; }
+  video { transform:scaleX(-1); object-fit:cover; }
+  aside { background:var(--panel); border-radius:10px; padding:16px; }
+  h1 { font-size:18px; margin:0 0 12px; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:4px 0; border-bottom:1px solid #ffffff14; vertical-align:top; }
+  td:first-child { color:var(--muted); width:46%; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); }
+  button { margin:4px 4px 0 0; padding:7px 10px; border-radius:5px; border:1px solid #ffffff40; background:#ffffff12; color:var(--ink); cursor:pointer; }
+  button.on { background:var(--ok); color:#123; }
+  #log { margin-top:12px; font:12px/1.5 monospace; color:var(--muted); max-height:180px; overflow:auto; white-space:pre-wrap; }
+  @media (max-width:800px) { main { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="stage"><video id="video" playsinline muted></video><canvas id="overlay" width="640" height="480"></canvas></div>
+  <aside>
+    <h1>Hand tracking test</h1>
+    <p style="color:var(--muted);margin-top:0">This page is only for checking the camera and ml5. Nothing is sent anywhere.</p>
+    <div>
+      <button id="start">Start camera</button>
+      <button data-model="lite" class="on">lite</button><button data-model="full">full</button>
+    </div>
+    <div>
+      <button data-backend="webgl">WebGL</button><button data-backend="webgpu">WebGPU</button><button data-backend="auto" class="on">Auto</button>
+    </div>
+    <div>
+      <button data-input="canvas" class="on">Input: canvas</button><button data-input="video">Input: video</button>
+    </div>
+    <p style="color:var(--muted);margin:10px 0 4px">What the model receives:</p>
+    <canvas id="preview" width="160" height="120" style="width:160px;height:120px;background:#000;border-radius:4px"></canvas>
+    <table id="stats"></table>
+    <div id="log"></div>
+  </aside>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const video = $('video'), ctx = $('overlay').getContext('2d');
+const stats = {};
+const frame = document.createElement('canvas'); let useCanvas = true;
+let model = null, running = false, modelType = 'lite', backend = 'auto', detections = 0, found = 0, lastMs = 0, frames = 0;
+const log = text => { $('log').textContent = `${new Date().toLocaleTimeString()}  ${text}\n` + $('log').textContent; };
+function show(name, value, good) { stats[name] = [value, good]; }
+function paint() {
+  $('stats').innerHTML = Object.entries(stats).map(([k, [v, g]]) => `<tr><td>${k}</td><td class="${g === true ? 'ok' : g === false ? 'bad' : ''}">${v}</td></tr>`).join('');
+}
+show('Secure page (camera allowed)', String(window.isSecureContext), window.isSecureContext);
+show('Address', location.origin);
+paint();
+
+function loadScript(url) {
+  return new Promise((resolve, reject) => { const s = document.createElement('script'); s.src = url; s.onload = resolve; s.onerror = () => reject(new Error('Could not load ' + url)); document.head.append(s); });
+}
+
+async function loadModel() {
+  running = false; model = null;
+  if (!window.ml5) { log('Loading ml5…'); await loadScript('https://unpkg.com/ml5@1.3.1/dist/ml5.min.js'); }
+  show('ml5 loaded', 'yes', true);
+  if (backend !== 'auto') {
+    try { if (ml5.setBackend) await ml5.setBackend(backend); else await ml5.tf.setBackend(backend); log('Backend set to ' + backend); }
+    catch (e) { log('Backend change failed: ' + e.message); }
+  }
+  const t0 = performance.now();
+  model = await ml5.handPose({ flipped: true, maxHands: 1, modelType });
+  if (typeof model?.ready?.then === 'function') await model.ready;
+  show('Model', `${modelType}, loaded in ${Math.round(performance.now() - t0)} ms`, true);
+  try { show('Graphics backend', (ml5.tf || window.tf)?.getBackend?.() || 'unknown'); } catch {}
+  paint();
+}
+
+async function start() {
+  try {
+    log('Asking for the camera…');
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' }, audio: false });
+    video.srcObject = stream; await video.play();
+    const track = stream.getVideoTracks()[0];
+    show('Camera', `${track.label || 'camera'} · ${video.videoWidth}×${video.videoHeight}`, video.videoWidth > 0);
+    paint();
+    await loadModel();
+    running = true; loop();
+  } catch (e) {
+    show('Error', `${e.name}: ${e.message}`, false); paint(); log(`${e.name}: ${e.message}`);
+  }
+}
+
+async function loop() {
+  if (!running) return;
+  const t0 = performance.now();
+  let results = [];
+  try {
+    if (frame.width !== video.videoWidth) { frame.width = video.videoWidth; frame.height = video.videoHeight; }
+    frame.getContext('2d').drawImage(video, 0, 0, frame.width, frame.height);
+    results = await model.detect(useCanvas ? frame : video);
+  }
+  catch (e) { log('detect failed: ' + e.message); }
+  lastMs = performance.now() - t0; detections++;
+  $('preview').getContext('2d').drawImage(frame, 0, 0, 160, 120);
+  ctx.clearRect(0, 0, 640, 480);
+  const hand = results?.[0];
+  if (hand) {
+    found++;
+    const sx = 640 / (video.videoWidth || 640), sy = 480 / (video.videoHeight || 480);
+    // flipped: true already mirrors the points to match the mirrored video.
+    for (const [i, k] of hand.keypoints.entries()) {
+      ctx.fillStyle = i === 8 ? '#ffd23f' : '#8fd17a';
+      ctx.beginPath(); ctx.arc(k.x * sx, k.y * sy, i === 8 ? 9 : 4, 0, Math.PI * 2); ctx.fill();
+    }
+    show('Hand seen now', `yes · confidence ${(hand.confidence ?? 0).toFixed(2)}`, (hand.confidence ?? 1) >= 0.65);
+    show('Fingertip (0–1)', `x ${(hand.keypoints[8].x / video.videoWidth).toFixed(2)}, y ${(hand.keypoints[8].y / video.videoHeight).toFixed(2)}`);
+  } else show('Hand seen now', 'no', false);
+  show('One detection takes', `${Math.round(lastMs)} ms`, lastMs < 60);
+  show('Detections / hands found', `${detections} / ${found}`);
+  show('Video still playing', String(!video.paused && video.readyState >= 2), !video.paused && video.readyState >= 2);
+  paint();
+  setTimeout(loop, 30);
+}
+
+let last = performance.now();
+(function fps(now) { frames++; if (now - last > 1000) { show('Page frames per second', frames, frames > 40); frames = 0; last = now; paint(); } requestAnimationFrame(fps); })(performance.now());
+
+$('start').addEventListener('click', start);
+document.querySelectorAll('[data-input]').forEach(b => b.addEventListener('click', () => {
+  useCanvas = b.dataset.input === 'canvas'; document.querySelectorAll('[data-input]').forEach(x => x.classList.toggle('on', x === b)); detections = 0; found = 0;
+}));
+document.querySelectorAll('[data-model]').forEach(b => b.addEventListener('click', async () => {
+  modelType = b.dataset.model; document.querySelectorAll('[data-model]').forEach(x => x.classList.toggle('on', x === b));
+  if (video.srcObject) { await loadModel(); running = true; loop(); }
+}));
+document.querySelectorAll('[data-backend]').forEach(b => b.addEventListener('click', async () => {
+  backend = b.dataset.backend; document.querySelectorAll('[data-backend]').forEach(x => x.classList.toggle('on', x === b));
+  if (video.srcObject) { await loadModel(); running = true; loop(); }
+}));
+</script>
+</body>
+</html>

@@ -28,7 +28,7 @@
       $('model').value = setup.ollama.models?.some(m => m.name === before) ? before : setup.ollama.models?.[0]?.name || setup.defaultModel;
       modelHealth();
     } catch (e) {
-      $('server-dot').className = 'status-dot bad'; $('server-status').textContent = 'Not connected'; $('setup-detail').textContent = 'Start the server with START_ACT1.cmd, then return to this page.';
+      $('server-dot').className = 'status-dot bad'; $('server-status').textContent = 'Not connected'; $('setup-detail').textContent = 'Start the server with START_PROJECT1.cmd, then return to this page.';
       $('create-session').disabled = true; $('test-model').disabled = true; $('launch-status').textContent = 'Server not connected'; $('connection-settings').open = true;
     } finally { $('refresh').disabled = false; }
   }

@@ -7,6 +7,7 @@ const os = require('node:os');
 const express = require('express');
 const { Server } = require('socket.io');
 const { createInterpreter } = require('./lib/interpreter.cjs');
+const { toEnglish } = require('./lib/translate.cjs');
 const { acts, createJourney, beginTransition, sceneLoaded } = require('./lib/journey.cjs');
 const { createAct2, gameView, setTarget, act2Action, stepAct2, pauseAct2, createHandoff } = require('./lib/act2.cjs');
 const { createAct3, act3View, act3Action, sendAct3, pauseAct3 } = require('./lib/act3.cjs');
@@ -19,6 +20,12 @@ function createGame(options = {}) {
   app.use(express.json({ limit: '8kb' }));
   app.disable('x-powered-by');
   app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); next(); });
+  // Browsers only allow the camera on localhost or HTTPS. Send other devices to the HTTPS address.
+  const isLocalHost = host => ['localhost', '127.0.0.1', '::1', '[::1]'].includes(host);
+  if (options.httpsPort) app.use((req, res, next) => {
+    if (req.secure || isLocalHost(req.hostname)) return next();
+    res.redirect(307, `https://${req.hostname}:${options.httpsPort}${req.originalUrl}`);
+  });
   const server = http.createServer(app);
   const io = new Server(server, { maxHttpBufferSize: 8192, serveClient: true });
   const rooms = new Map();
@@ -32,7 +39,8 @@ function createGame(options = {}) {
   const engineOf = room => room.engine || interpreter;
   const freshRoom = (id, engine = interpreter) => ({ id, phase: 'act1', players: [null, null], messages: [], busy: false, touched: clock(), engine, hostToken: crypto.randomBytes(24).toString('hex'), pending: null, journey: createJourney() });
   const port = () => server.address()?.port || Number(process.env.PORT || 3000);
-  const lanAddresses = () => { try { return Object.values(os.networkInterfaces()).flat().filter(n => n && n.family === 'IPv4' && !n.internal).map(n => `http://${n.address}:${port()}`); } catch { return []; } };
+  // With HTTPS on (see tools/start.cjs), invitations use https:// so the camera works on every device.
+  const lanAddresses = () => { try { return Object.values(os.networkInterfaces()).flat().filter(n => n && n.family === 'IPv4' && !n.internal).map(n => options.httpsPort ? `https://${n.address}:${options.httpsPort}` : `http://${n.address}:${port()}`); } catch { return []; } };
   const getOllama = model => createInterpreter({ mode: 'ollama', model: validModel(model) ? model : interpreter.model, url: options.ollamaUrl });
   app.get('/api/status', async (req, res) => {
     const room = rooms.get(req.query.room);
@@ -72,8 +80,12 @@ function createGame(options = {}) {
       players: room.players.map((p, i) => ({ player: i + 1, connected: isPresent(p), sent: p?.sent || 0, ready: p?.ready || false })),
       messages: room.messages.map(m => ({ ...m, player: m.from === 'human' ? 1 : 2 })) });
   });
-  app.get(['/player1.html', '/player2.html', '/play.html'], (req, res) => res.sendFile(path.join(__dirname, 'public/chat.html')));
-  // Production dependencies are served locally; no CDN is needed for p5 drawing.
+  app.get(['/player1.html', '/player2.html', '/play.html'], (req, res) => {
+     const room = rooms.get(String(req.query.room || '').toLowerCase());
+     const act1 = !room || room.phase === 'act1';
+     const aim = act1 && req.path === '/player1.html'; // Player 1 only, and only during Act I
+     res.sendFile(path.join(__dirname, 'public', aim ? 'aim.html' : 'chat.html'));
+   });
   app.use('/vendor/p5', express.static(path.join(__dirname, 'public/vendor/p5')));
   app.use(express.static(path.join(__dirname, 'public')));
 
@@ -93,7 +105,14 @@ function createGame(options = {}) {
         : { id: m.id, kind: 'received', text: m.y, tone: m.tone, at: m.at, engine: m.engine })
     };
   }
+  // Act III must always have its state once the room reaches it, even if a step was missed on the way.
+  function ensureAct3(room) {
+    if (room.phase !== 'act3' || room.act3) return;
+    if (!room.journey.handoff) room.journey.handoff = { from: 'act2', key: 'joined', shell: 'closed', recoveredMessageIds: [], bothConsented: true };
+    room.act3 = createAct3();
+  }
   function publish(room) {
+    ensureAct3(room);
     for (const p of room.players) if (isPresent(p)) io.to(p.socketId).emit('state', roomState(room, p));
   }
   function context(socket) {
@@ -118,10 +137,12 @@ function createGame(options = {}) {
       if (room.phase !== 'act2' || !room.act2 || !room.players.every(isPresent)) continue;
       if (now < room.journey.transition.startsAt || !stepAct2(room.act2, elapsed)) continue;
       for (const player of room.players) {
-        io.to(player.socketId).emit('stage:state', {
-          act: 'act2', positions: room.journey.stage.positions,
-          game: gameView(room.act2, player.role)
-        });
+        // Send an update only when something this player can see has changed.
+        const packet = { act: 'act2', positions: room.journey.stage.positions, game: gameView(room.act2, player.role) };
+        const text = JSON.stringify(packet);
+        if (player.lastStage === text) continue;
+        player.lastStage = text;
+        io.to(player.socketId).emit('stage:state', packet);
       }
     }
   }
@@ -211,19 +232,21 @@ function createGame(options = {}) {
       const inferenceStart = clock();
       try {
         // x = the real player's input. y = an interpretation of x, not an invented partner reply.
-        const { y, tone, engine } = await engineOf(room).interpret(x, phraseId);
+        const xEn = await toEnglish(x); // English version when x is Chinese, otherwise null
+      const { y, tone, engine } = await engineOf(room).interpret(x, phraseId); // rewrite the words in their own language, never translated first
         if (typeof y !== 'string' || !y.trim() || y.length > 480) throw new Error('The interpretation was not readable.');
         if (rooms.get(room.id) !== room) throw new Error('This room has closed.');
-        room.messages.push({ id: crypto.randomUUID(), from: player.role, x, y: y.trim(), tone, engine, at: clock(), durationMs: clock() - inferenceStart });
+        room.messages.push({ id: crypto.randomUUID(), from: player.role, x, xEn, y: y.trim(), tone, engine, at: clock(), durationMs: clock() - inferenceStart });
         player.sent += 1; player.ready = false;
         for (const p of room.players) if (p) p.ready = false;
         ack({ ok: true });
       } catch (error) {
+        console.warn(`[message] ${error.name}: ${error.message}`); // shows the real cause in the server window
         const timeout = error.name === 'TimeoutError' || error.name === 'AbortError';
         const offline = error.cause?.code === 'ECONNREFUSED' || error.message === 'fetch failed';
         ack({ ok: false, error: timeout ? 'The local model took too long. Please retry.' : offline
           ? 'Ollama is not running on the server computer. Open it and try again.'
-          : 'The local model could not interpret this message. Check Ollama and retry.' });
+          : `The local model could not interpret this message (${String(error.message).slice(0, 120)}). Check Ollama and retry.` });
       } finally { room.busy = false; room.pending = null; room.touched = clock(); publish(room); }
     });
 
@@ -254,10 +277,12 @@ function createGame(options = {}) {
       if (!c || !sceneLoaded(c.room, c.player.role, data, clock(), c.room.players.every(isPresent))) {
         ack({ ok: false, error: 'This scene is not ready to open.' }); return;
       }
-      if (c.room.phase === 'act2' && !c.room.act2) c.room.act2 = createAct2(c.room.journey.stage.positions);
-      if (c.room.phase === 'act3' && !c.room.act3 && c.room.journey.handoff?.key === 'joined') c.room.act3 = createAct3();
+      if (c.room.phase === 'act2' && !c.room.act2) c.room.act2 = createAct2(c.room.journey.stage.positions, c.room.messages); // Act II is built from this room's real Act I messages
+      ensureAct3(c.room);
       c.room.touched = clock(); ack({ ok: true }); publish(c.room);
     });
+    // A scene that is missing its state can ask for the latest copy.
+    socket.on('state:refresh', () => { const c = context(socket); if (c) publish(c.room); });
     socket.on('act2:action', (data, ack = () => {}) => {
       if (typeof ack !== 'function') return;
       const c = context(socket);
@@ -296,6 +321,9 @@ function createGame(options = {}) {
       if (!result.ok) return;
       c.room.touched = clock();
       socket.to(c.room.id).emit('stage:state', { act: 'act3', typing: { role: c.player.role, active: false } });
+    // The words stay exactly as written; an English version is added beside them for the other person.
+    const sent = c.room.act3.messages.find(m => m.id === result.id);
+    toEnglish(sent && sent.text).then(en => { if (en && rooms.get(c.room.id) === c.room) { sent.translation = en; publish(c.room); } });
       publish(c.room);
     });
     socket.on('act3:typing', active => {

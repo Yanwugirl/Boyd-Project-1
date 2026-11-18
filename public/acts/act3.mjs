@@ -1,3 +1,5 @@
+import { useAimTheme, windowFrame, setTitle } from './aim-shell.mjs';
+
 function node(tag, className, text) {
   const result = document.createElement(tag);
   if (className) result.className = className;
@@ -19,11 +21,13 @@ const picture = `<svg viewBox="0 0 320 300" role="img" aria-label="Two people, a
 </svg>`;
 
 export async function mount({ host, state: initial, emit }) {
+  const aim = initial.role === 'human'; // only Player 1 gets the AIM look
+  useAimTheme(initial.role);
   let state = initial, act = initial.act3;
   let serverBase = initial.serverTime || Date.now(), localBase = performance.now();
   let actionPending = false, sending = false, destroyed = false, reading = false;
   let introSignature = '', messageSignature = '', outbox = null;
-  let readyTimer, typingTimer, remoteTypingTimer, lastTyping = -Infinity;
+  let readyTimer, typingTimer, remoteTypingTimer, refreshTimer, lastTyping = -Infinity;
   const draftKey = `between-us:act3:${state.room}:${state.role}`;
   const root = node('section', 'act3-space');
   const garden = node('aside', 'a3-garden');
@@ -76,7 +80,9 @@ export async function mount({ host, state: initial, emit }) {
   const read = node('button', 'a3-primary', 'Read our conversation'); read.type = 'button'; read.dataset.gesture = '';
   const leave = node('a', 'a3-return', 'Return to the beginning'); leave.href = '/';
   endingActions.append(read, leave); ending.append(finalWords, endingActions);
-  main.append(intro, chat, ending); root.append(garden, main); host.append(root);
+  main.append(intro, chat, ending);
+  const mainWindow = aim ? windowFrame('You : The other person - Instant Message', main, 'aim-main') : null;
+  root.append(aim ? windowFrame('Buddy Info', garden, 'aim-side') : garden, aim ? mainWindow : main); host.append(root);
 
   try {
     const saved = JSON.parse(sessionStorage.getItem(draftKey));
@@ -178,6 +184,7 @@ export async function mount({ host, state: initial, emit }) {
       const time = new Date(message.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
       heading.append(node('span', '', mine ? 'You' : 'The other person'), node('time', '', time));
       row.append(heading, node('p', 'a3-bubble', message.text));
+      if (message.translation) row.append(node('p', 'a3-translation', `English: ${message.translation}`));
       if (mine) row.append(node('small', 'a3-sent', 'Sent ✓'));
       log.append(row);
     }
@@ -197,11 +204,21 @@ export async function mount({ host, state: initial, emit }) {
   }
   function render() {
     if (destroyed) return;
-    if (!act) { intro.textContent = 'Your shared key is arriving…'; chat.hidden = true; ending.hidden = true; return; }
+    if (!act) {
+      // Waiting for the room's Act III state. Ask the server again rather than waiting forever.
+      introSignature = '';
+      intro.textContent = 'Your shared key is arriving…'; intro.hidden = false; chat.hidden = true; ending.hidden = true;
+      // Start one request timer and let it run. Hand status messages also call render(); restarting the timer
+      // on each of them kept postponing the request, so the key page only appeared after the hand was paused.
+      if (!refreshTimer) refreshTimer = setTimeout(() => { refreshTimer = null; if (!destroyed && !act) { emit('state:refresh'); render(); } }, 1200);
+      return;
+    }
+    clearTimeout(refreshTimer); refreshTimer = null;
     const sealed = act.step === 'sealed';
     const complete = act.step === 'complete';
     root.classList.toggle('is-open', !sealed);
     root.classList.toggle('is-complete', complete);
+    if (aim) setTitle(mainWindow, sealed ? 'Shared Key - File Transfer' : complete ? 'You : The other person - Signed Off' : 'You : The other person - Instant Message');
     intro.hidden = !sealed; chat.hidden = sealed || (complete && !reading); ending.hidden = !complete || reading;
     form.hidden = complete;
     gardenTitle.textContent = sealed ? 'A little space\nto be heard.' : complete ? 'The words\nwere yours.' : 'Two people.\nTheir own words.';
@@ -262,6 +279,12 @@ export async function mount({ host, state: initial, emit }) {
     }
   }));
   render();
+  // Hand input is the main way to play: start the camera automatically. The mouse still works.
+  (function startHand(tries = 0) {
+    if (destroyed || !window.GestureInput || GestureInput.active || tries > 20) return;
+    if (GestureInput.loading) { setTimeout(() => startHand(tries + 1), 500); return; }
+    hand.click();
+  })();
   return {
     update(next) {
       state = next; act = next.act3; serverBase = next.serverTime; localBase = performance.now(); render();
@@ -274,7 +297,7 @@ export async function mount({ host, state: initial, emit }) {
     },
     destroy() {
       destroyed = true; saveDraft(); stopTyping(); GestureInput.stop();
-      clearTimeout(readyTimer); clearTimeout(typingTimer); clearTimeout(remoteTypingTimer); root.remove();
+      clearTimeout(readyTimer); clearTimeout(typingTimer); clearTimeout(remoteTypingTimer); clearTimeout(refreshTimer); root.remove();
     }
   };
 }

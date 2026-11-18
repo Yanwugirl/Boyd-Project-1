@@ -1,0 +1,33 @@
+/* Act II "The Filter Room" panel pieces. Loaded by act2.mjs.
+   Player 2 keeps the original green look; Player 1 (body[data-player="human"]) keeps the XP/AIM look. */
+/* The system cursor hides only while the hand is the pointer, so the mouse is easy to find again. */
+body.hand-on .act2-board{cursor:none}
+.a2f-line{margin:0 0 12px;padding:11px 13px;border:1px solid #d6dfc7;border-radius:6px;background:#f6f6ee}
+.a2f-line small{display:block;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#8f9a7d}
+.a2f-line p{margin:5px 0 0;font:15px/1.5 Georgia,serif;color:#435d3d;overflow-wrap:anywhere}
+.a2f-line.a2f-mine{border-left:3px solid #7d975b}
+.a2f-line.a2f-comfort p{color:#9aa38b;font-style:italic}
+.a2f-meter{margin:16px 0 8px}
+.a2f-meter-label{display:block;font-size:8px;letter-spacing:1px;color:#80936d;margin-bottom:6px}
+.a2f-meter-bar{height:6px;border-radius:10px;background:#d5dec6;overflow:hidden}
+.a2f-meter-fill{height:100%;width:0;background:#7d975b;transition:width .12s linear}
+.a2f-meter-caption{font-size:10px;line-height:1.6;color:#7d8c72;margin:6px 0 0}
+.a2f-status{font-size:12px;line-height:1.6;color:#526f40;margin:12px 0 0}
+.a2f-hint{font-size:11px;line-height:1.7;color:#6a633c;background:#efe6c8;border-radius:5px;padding:9px 11px;margin:12px 0 0}
+.a2f-outcome{font-size:12px;line-height:1.6;color:#7b3b2a;background:#f2dfd6;border-left:3px solid #b5654c;border-radius:0 5px 5px 0;padding:10px 12px;margin:14px 0 0}
+.a2f-restored-list{margin:6px 0 18px}
+
+/* Player 1: XP / AIM */
+body[data-player="human"] .a2f-line{background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0}
+body[data-player="human"] .a2f-line small{font:10px Tahoma,sans-serif;letter-spacing:0;text-transform:none;color:#808080}
+body[data-player="human"] .a2f-line p{font:15px/1.45 Arial,sans-serif;color:#000}
+body[data-player="human"] .a2f-line.a2f-mine p{color:#0000e0}
+body[data-player="human"] .a2f-line.a2f-comfort p{color:#808080}
+body[data-player="human"] .a2f-meter-label{font:10px Tahoma,sans-serif;letter-spacing:0;color:#333}
+body[data-player="human"] .a2f-meter-bar{height:16px;border-radius:0;background:#fff;border:1px solid #808080}
+body[data-player="human"] .a2f-meter-fill{background:repeating-linear-gradient(90deg,#2f9e44 0 8px,#fff 8px 10px)}
+body[data-player="human"] .a2f-meter-caption,body[data-player="human"] .a2f-status{font:11px/1.6 Tahoma,sans-serif;color:#333}
+body[data-player="human"] .a2f-hint{font:11px/1.6 Tahoma,sans-serif;background:#ffffe1;border:1px solid #000;border-radius:0;color:#000}
+body[data-player="human"] .a2f-outcome{font:11px/1.6 Tahoma,sans-serif;background:#fff0f0;border:1px solid #a00;border-radius:0;color:#a00}
+
+@media(prefers-reduced-motion:reduce){.a2f-meter-fill{transition:none}}

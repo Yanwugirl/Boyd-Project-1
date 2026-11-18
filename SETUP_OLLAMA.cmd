@@ -13,6 +13,6 @@ call ollama pull qwen2.5:1.5b
 if errorlevel 1 (
   echo Download did not complete. Open Ollama and try again.
 ) else (
-  echo Ready. Open START_ACT1.cmd and use the setup page.
+  echo Ready. Open START_PROJECT1.cmd and use the setup page.
 )
 pause

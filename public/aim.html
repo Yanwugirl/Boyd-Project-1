@@ -7,8 +7,58 @@
   <!-- p5 comes from a CDN. If the game ships its own copy in public/vendor/p5, point this at that file so it works offline. -->
   <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <style>
+    /* A small, optional room-code helper for Player 1, like the one in Player 2's sidebar.
+       It sits quietly in the desktop's corner and opens only when clicked. */
+    .room-tools { position: fixed; left: 14px; bottom: 12px; z-index: 5; max-width: 230px;
+      font: 11px/1.5 Tahoma, Verdana, sans-serif; color: #eaf2ff; }
+    .room-tools summary { cursor: pointer; list-style: none; opacity: .75; text-shadow: 1px 1px 1px #0b2a55; }
+    .room-tools summary::-webkit-details-marker { display: none; }
+    .room-tools summary:hover, .room-tools[open] summary { opacity: 1; text-decoration: underline; }
+    .room-tools .room-box { margin-top: 6px; padding: 8px 9px; background: #ece9d8; color: #000;
+      border: 1px solid #0831a0; border-radius: 3px; box-shadow: 0 4px 12px #00000040; }
+    .room-tools code { display: block; font: 11px Tahoma, sans-serif; color: #0a3ca8; overflow-wrap: anywhere; margin-bottom: 6px; }
+    .room-tools button { font: 11px Tahoma, sans-serif; color: #000; background: linear-gradient(#fff, #ece9d8 85%, #d6d0c0);
+      border: 1px solid #003c74; border-radius: 3px; padding: 2px 8px; cursor: pointer; }
+    .room-tools form { display: flex; gap: 4px; margin-top: 8px; }
+    .room-tools input { flex: 1; min-width: 0; font: 11px Tahoma, sans-serif; padding: 2px 4px; border: 1px solid #7f9db9; }
+    .room-tools p { margin: 6px 0 0; color: #555; }
+    .room-tools .room-error { color: #a00; }
+  </style>
 </head>
 <body>
+  <details class="room-tools">
+    <summary>Have a room code?</summary>
+    <div class="room-box">
+      <code id="room-code-text"></code>
+      <button id="copy-room" type="button">Copy room code</button>
+      <form id="join-form">
+        <label for="room-input" style="position:absolute;left:-9999px">Room code</label>
+        <input id="room-input" maxlength="36" placeholder="Enter room code" autocomplete="off" required>
+        <button type="submit" aria-label="Join room">→</button>
+      </form>
+      <p>Each room has two places.</p>
+      <p id="room-error" class="room-error" role="alert"></p>
+    </div>
+  </details>
+  <script>
+    (() => {
+      const code = (new URLSearchParams(location.search).get('room') || '').toLowerCase().trim();
+      const $ = id => document.getElementById(id);
+      $('room-code-text').textContent = code || 'No room yet';
+      $('copy-room').hidden = !code;
+      $('copy-room').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(code); $('copy-room').textContent = 'Copied'; }
+        catch { $('room-error').textContent = 'Select and copy the code above.'; }
+      });
+      $('join-form').addEventListener('submit', event => {
+        event.preventDefault();
+        const id = $('room-input').value.trim().toLowerCase();
+        if (/^[a-z0-9][a-z0-9-]{1,35}$/.test(id)) location.href = `/play.html?room=${encodeURIComponent(id)}`;
+        else $('room-error').textContent = 'Enter the full room code from your invitation.';
+      });
+    })();
+  </script>
   <script src="aim.js"></script>
 </body>
 </html>

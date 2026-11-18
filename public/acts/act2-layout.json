@@ -1,19 +1,38 @@
 {
-  "bounds": { "left": 0.08, "right": 0.92, "top": 0.1, "bottom": 0.9 },
-  "wallX": 0.5,
-  "doorHalfHeight": 0.065,
-  "playerRadius": 0.023,
-  "speed": 0.28,
-  "doors": [
-    { "id": "triangle", "glyph": "△", "name": "triangle", "y": 0.28 },
-    { "id": "circle", "glyph": "○", "name": "circle", "y": 0.5 },
-    { "id": "wave", "glyph": "≈", "name": "wave", "y": 0.72 }
+  "about": "Act II 'The Filter Room'. All positions are fractions of the board (0 to 1). Timings are in milliseconds.",
+  "maxRounds": 3,
+  "terminals": [
+    { "x": 0.2, "y": 0.42 },
+    { "x": 0.5, "y": 0.42 },
+    { "x": 0.8, "y": 0.42 }
   ],
-  "spawns": { "human": { "x": 0.22, "y": 0.75 }, "robot": { "x": 0.78, "y": 0.75 } },
-  "rounds": [
-    { "operator": "human", "guide": "robot", "pad": { "x": 0.8, "y": 0.5 }, "goal": { "x": 0.81, "y": 0.2 }, "title": "Make room to listen" },
-    { "operator": "robot", "guide": "human", "pad": { "x": 0.2, "y": 0.5 }, "goal": { "x": 0.19, "y": 0.2 }, "title": "Let the other person lead" }
+  "terminal": { "w": 0.25, "h": 0.32 },
+  "pull": 0.45,
+  "settleMs": 900,
+  "stillThreshold": 0.08,
+  "pinMs": 900,
+  "meetMs": 1300,
+  "outcomeMs": 4200,
+  "handAgeMs": 700,
+  "joinRing": { "x": 0.5, "y": 0.56, "r": 0.12 },
+  "joinMs": 1600,
+  "comfortLines": [
+    "I'm always here for you.",
+    "Everything is fine between us.",
+    "Don't worry, I understand completely.",
+    "Of course. Whatever you need.",
+    "You never have to explain anything to me."
   ],
-  "keySlots": { "human": { "x": 0.43, "y": 0.28 }, "robot": { "x": 0.57, "y": 0.28 } },
-  "keyHoldMs": 1600
+  "comfortLinesZh": [
+    "我一直都在你身边。",
+    "我们之间一切都很好。",
+    "别担心，我完全理解。",
+    "当然，你需要什么都可以。",
+    "你永远不用向我解释任何事。"
+  ],
+  "fallbackMessages": [
+    { "from": "robot", "x": "I need some time.", "y": "I'll always be by your side." },
+    { "from": "human", "x": "I don't know what to say.", "y": "It's so lovely to hear from you." },
+    { "from": "robot", "x": "I'm not sure I agree.", "y": "You're absolutely right." }
+  ]
 }
